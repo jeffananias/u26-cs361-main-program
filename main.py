@@ -58,6 +58,10 @@ def select() -> None:
     for i in range(playlist_count):
         print(f"({i + 1}) {playlists[i]}")
     print("")
+    print("Any commands issued for this playlist will permanently")
+    print("overwrite its contents. Some commands permit an undo")
+    print("featured, but not all.")
+    print("")
 
     # Validate user input and return selection
     sel_playlist = validate_selection(playlists, playlist_count)
