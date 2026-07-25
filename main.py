@@ -7,8 +7,8 @@
 #              and store songs of .mp3, .wav, .flac, .aac, and .ogg format.
 
 import os
-import time
 import re
+import time
 
 
 def greet() -> None:
@@ -180,10 +180,7 @@ def display(sel_playlist: str) -> None:
     """
     os.system('clear')
 
-    print("* * *                   DISPLAY PLAYLIST                  * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This page displays the contents of the selected playlist.   *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    
     print("")
     print(f"{sel_playlist} Playlist:")
     print("")
@@ -230,12 +227,14 @@ def main() -> None:
             if sel_playlist == None:
                 print("Please select a playlist first.")
                 print("")
+                time.sleep(2)
             else:
                 add(sel_playlist)
         elif cmd == "display":
             if sel_playlist == None:
                 print("Please select a playlist first.")
                 print("")
+                time.sleep(2)
             else:
                 display(sel_playlist)
         elif cmd == 'exit':
