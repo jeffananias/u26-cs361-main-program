@@ -60,7 +60,7 @@ def select() -> None:
     print("")
     print("Any commands issued for this playlist will permanently")
     print("overwrite its contents. Some commands permit an undo")
-    print("featured, but not all.")
+    print("feature, but not all.")
     print("")
 
     # Validate user input and return selection
