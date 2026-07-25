@@ -193,7 +193,7 @@ def display(sel_playlist: str) -> None:
         song_paths = f.readlines()
         for song_path in song_paths:
             song = re.search(r'[^\/]+$', song_path)
-            print(song.group(0)[:-2])
+            print(song.group(0)[:-1])
     print("")
 
     go_back = input("Press ENTER to go back.")
