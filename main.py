@@ -180,7 +180,10 @@ def display(sel_playlist: str) -> None:
     """
     os.system('clear')
 
-    
+    print("* * *                   DISPLAY PLAYLIST                  * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This page displays the contents of the selected playlist.   *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
     print(f"{sel_playlist} Playlist:")
     print("")
@@ -193,7 +196,7 @@ def display(sel_playlist: str) -> None:
             print(song.group(0)[:-2])
     print("")
 
-    go_back = input("Press any key to go back.")
+    go_back = input("Press ENTER to go back.")
 
 
 def main() -> None:
