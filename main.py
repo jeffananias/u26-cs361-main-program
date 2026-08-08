@@ -1,6 +1,6 @@
 # Name: Jeff Ananias
 # Course: CS 361
-# Date: 2026-07-21
+# Due Date: 2026-08-10
 # Description: This file provides a command-line interface for a user to
 #              select a playlist, add a playlist, display the selected
 #              playlist, and exit the interface. Playlists are .m3u8 files
@@ -33,6 +33,54 @@ def greet() -> None:
     print("and display it. Users must send commands in the local directory")
     print("that contains the playlists and songs.")
     print("")
+
+
+def check_selection(sel_playlist: str) -> None:
+    """
+    Tell user to select playlist if none selected.
+    """
+    if sel_playlist == None:
+        print(f"First select a playlist.\n")
+    else:
+        print(f"Your selected playlist is {sel_playlist}.\n")
+
+
+def prompt() -> str:
+    """
+    Prompt user with instructions.
+    """
+    print("Commands:")
+    print("create | select | add | remove | reorder | display")
+    print("shuffle | duplicate | delete | batch | sort | exit")
+    return input("Type a command and press ENTER: ")
+
+
+def remind_to_select() -> None:
+    """
+    TODO: Write docstring
+    """
+    print("Please select a playlist first.\n")
+    time.sleep(2)
+
+
+def route_cmd(cmd: str, sel_playlist: str) -> None:
+    """
+    Route user input command to intended function with selected playlist.
+    """
+    match cmd:
+        case "select":
+            sel_playlist = select()
+            print("")
+        case "add":
+            add(sel_playlist) if sel_playlist != None \
+                else remind_to_select()
+        case "display":
+            display(sel_playlist) if sel_playlist != None \
+                else remind_to_select()
+        case 'exit':
+            exit()
+        case _:
+            print("Invalid command.")
 
 
 def select() -> None:
@@ -83,7 +131,7 @@ def validate_selection(files: list, count: int) -> str:
 
     print("")
     print(f"You chose {files[choice - 1]}.")
-    confirmation = input("Type Y and press ENTER to confirm, or type any other key and press ENTER to choose again: ")
+    confirmation = input("Confirm with Y or deny with any other key: ")
     if confirmation.lower() == "y":
         print("")
         return files[choice - 1]
@@ -163,7 +211,7 @@ def validate_addition(files: list, count: int) -> list:
     print("You chose the following song(s):")
     for choice in choices:
         print(f"{files[choice - 1]}")
-    confirmation = input("Type Y and press ENTER to confirm, or type any other key and press ENTER to choose again: ")
+    confirmation = input("Confirm with Y or deny with any other key: ")
     if confirmation.lower() == "y":
         print("")
         additions = []
@@ -208,41 +256,9 @@ def main() -> None:
     while True:
         os.system("clear")
         greet()
-
-        # Tell user to select playlist if none selected
-        if sel_playlist == None:
-            print(f"First select a playlist.")
-        else:
-            print(f"Your selected playlist is {sel_playlist}.")
-        print("")
-
-        # Prompt user with instructions
-        print("Commands: 'select', 'add', 'display', 'exit'")
-        cmd = input("Type a command and press ENTER: ")
-        print("")
-
-        # Route user input to function
-        if cmd == "select":
-            sel_playlist = select()
-            print("")
-        elif cmd == "add":
-            if sel_playlist == None:
-                print("Please select a playlist first.")
-                print("")
-                time.sleep(2)
-            else:
-                add(sel_playlist)
-        elif cmd == "display":
-            if sel_playlist == None:
-                print("Please select a playlist first.")
-                print("")
-                time.sleep(2)
-            else:
-                display(sel_playlist)
-        elif cmd == 'exit':
-            exit()
-        else:
-            print("Invalid command.")
+        check_selection(sel_playlist)
+        cmd = prompt()
+        route_cmd(cmd, sel_playlist)
 
 
 if __name__ == '__main__':
