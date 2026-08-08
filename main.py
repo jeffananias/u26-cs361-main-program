@@ -39,7 +39,7 @@ def select() -> None:
     """
     Show menu to user for selection of playlist.
     """
-    os.system('clear')
+    os.system("clear")
 
     print("* * *                   SELECT PLAYLIST                   * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
@@ -95,7 +95,7 @@ def add(sel_playlist: str) -> None:
     """
     Show menu to user for addition of one or more songs to selected playlist.
     """
-    os.system('clear')
+    os.system("clear")
 
     print("* * *                ADD SONG TO PLAYLIST                 * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
@@ -178,7 +178,7 @@ def display(sel_playlist: str) -> None:
     """
     Show contents of selected playlist to user.
     """
-    os.system('clear')
+    os.system("clear")
 
     print("* * *                   DISPLAY PLAYLIST                  * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
@@ -206,11 +206,10 @@ def main() -> None:
     sel_playlist = None
 
     while True:
-        # Clear terminal and greet user
-        os.system('clear')
+        os.system("clear")
         greet()
 
-        # Tell user to select playlist is none selected
+        # Tell user to select playlist if none selected
         if sel_playlist == None:
             print(f"First select a playlist.")
         else:
