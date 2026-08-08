@@ -8,7 +8,10 @@
 
 import os
 import re
-import time
+from time import sleep
+
+
+PATH = os.getcwd()
 
 
 def greet() -> None:
@@ -55,32 +58,55 @@ def prompt() -> str:
     return input("Type a command and press ENTER: ")
 
 
-def remind_to_select() -> None:
-    """
-    TODO: Write docstring
-    """
-    print("Please select a playlist first.\n")
-    time.sleep(2)
-
-
 def route_cmd(cmd: str, sel_playlist: str) -> None:
     """
     Route user input command to intended function with selected playlist.
     """
-    match cmd:
-        case "select":
-            sel_playlist = select()
-            print("")
-        case "add":
-            add(sel_playlist) if sel_playlist != None \
-                else remind_to_select()
-        case "display":
-            display(sel_playlist) if sel_playlist != None \
-                else remind_to_select()
-        case 'exit':
-            exit()
-        case _:
-            print("Invalid command.")
+    if cmd != "create" and sel_playlist == None:
+        print("Please select a playlist first.\n")
+        sleep(2)
+    else:
+        match cmd:
+            case "create":
+                create()
+            case "add":
+                add(sel_playlist)
+            case "remove":
+                remove(sel_playlist)
+            case "reorder":
+                reorder(sel_playlist)
+            case "display":
+                display(sel_playlist)
+            case "shuffle":
+                shuffle(sel_playlist)
+            case "duplicate":
+                duplicate(sel_playlist)
+            case "delete":
+                delete(sel_playlist)
+            case "batch":
+                add_batch(sel_playlist)
+            case "sort":
+                sort(sel_playlist)
+            case 'exit':
+                exit()
+            case _:
+                print("Invalid command.")
+
+
+def create() -> None:
+    os.system("clear")
+
+    print("* * *                   CREATE PLAYLIST                   * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you create a playlist file.                  *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+    playlist_name = input("What will be your playlist name? ")
+    with open(playlist_name + ".m3u8", "w") as f:
+        f.write("")
+    print("Playlist created.")
+    sleep(2)
 
 
 def select() -> None:
@@ -97,8 +123,7 @@ def select() -> None:
     print("")
 
     # Create list of sorted .m3u8 files in current path
-    path = os.getcwd()
-    files = sorted(os.listdir(path))
+    files = sorted(os.listdir(PATH))
     playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
 
     # Print enumerated playlist file names
@@ -106,9 +131,8 @@ def select() -> None:
     for i in range(playlist_count):
         print(f"({i + 1}) {playlists[i]}")
     print("")
-    print("Any commands issued for this playlist will permanently")
-    print("overwrite its contents. Some commands permit an undo")
-    print("feature, but not all.")
+    print("Any commands issued for this playlist will permanently overwrite")
+    print("its contents. Some commands permit an undo feature, but not all.")
     print("")
 
     # Validate user input and return selection
@@ -155,8 +179,7 @@ def add(sel_playlist: str) -> None:
     print("")
 
     # Create list of sorted music files in current path
-    path = os.getcwd()
-    files = sorted(os.listdir(path))
+    files = sorted(os.listdir(PATH))
     music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
     songs = [f for f in files if f.endswith(music_exts)]
 
@@ -173,27 +196,71 @@ def add(sel_playlist: str) -> None:
     print("")
 
     # Validate user input and store additions
-    additions = validate_addition(songs, song_count)
+    additions = validate_add_or_rem(songs, song_count)
     while additions is None:
-        additions = validate_addition(songs, song_count)
+        additions = validate_add_or_rem(songs, song_count)
     add_count = len(additions)
     
     # Write additions to selected playlist
     print("Adding song(s) to playlist...")
     with open(sel_playlist + ".m3u8", "a") as f:
         for addition in additions:
-            f.write(path + "/" + addition + "\n")
+            f.write(PATH + "/" + addition + "\n")
     print("Done!")
     print("")
 
+"""
+def remove(sel_playlist: str) -> None:
+    
+    Show menu to user for removal of one or more songs to selected playlist.
+    
+    os.system("clear")
 
-def validate_addition(files: list, count: int) -> list:
+    print("* * *              REMOVE SONG FROM PLAYLIST              * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you remove one or more songs from the        *")
+    print("* selected playlist. To remove more than one song, enter      *")
+    print("* multiple numbers separated by commas.                       *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+    # Create list of sorted music files in current path
+    files = sorted(os.listdir(path))
+    music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
+    songs = [f for f in files if f.endswith(music_exts)]
+
+    # Print enumerated music file names
+    song_count = len(songs)
+    with open(sel_playlist + ".m3u8") as f:
+        playlist_contents = f.read()
+        for i in range(song_count):
+            if songs[i] in playlist_contents:
+                print(f"({i + 1}) {songs[i]}")
+    print("")
+
+    # Validate user input and store additions
+    removals = validate_add_or_rem(songs, song_count)
+    while removals is None:
+        removals = validate_add_or_rem(songs, song_count)
+    remove_count = len(removals)
+    
+    # Write additions to selected playlist
+    print("Removing song(s) from playlist...")
+    with open(sel_playlist + ".m3u8", "w") as f:
+        for song in songs:
+            if song not in removals:
+                f.write(PATH + "/" + addition + "\n")
+    print("Done!")
+    print("")
+"""
+
+def validate_add_or_rem(files: list, count: int) -> list:
     """
-    Validate user input for addition of one or more songs to selected
-    playlist.
+    Validate user input for addition or removal of one or more songs to
+    selected playlist.
     """
     # Ensure string input is series of comma-delimited integers
-    choices = input("Enter number(s) to add song(s): ")
+    choices = input("Enter number(s) to choose song(s): ")
     pattern = re.compile(r'^\s*\d+\s*(?:,\s*\d+\s*)*$')
     if pattern.match(choices) is None:
         print("Invalid syntax.")
@@ -206,7 +273,7 @@ def validate_addition(files: list, count: int) -> list:
             print("Invalid choice(s). Only use available numbers.")
             return
 
-    # Confirm choices and return them to add()
+    # Confirm choices and return them
     print("")
     print("You chose the following song(s):")
     for choice in choices:
@@ -214,10 +281,10 @@ def validate_addition(files: list, count: int) -> list:
     confirmation = input("Confirm with Y or deny with any other key: ")
     if confirmation.lower() == "y":
         print("")
-        additions = []
+        adds_or_rems = []
         for choice in choices:
-            additions.append(files[choice - 1])
-        return additions
+            adds_or_rems.append(files[choice - 1])
+        return adds_or_rems
     else:
         print("Choice not confirmed.")
 
@@ -258,7 +325,10 @@ def main() -> None:
         greet()
         check_selection(sel_playlist)
         cmd = prompt()
-        route_cmd(cmd, sel_playlist)
+        if cmd == "select":
+            sel_playlist = select()
+        else:
+            route_cmd(cmd, sel_playlist)
 
 
 if __name__ == '__main__':
