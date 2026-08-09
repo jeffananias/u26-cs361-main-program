@@ -2,3 +2,6 @@
 *.ogg
 *.m3u8
 *.txt
+ASCII_Confirmation_Generator.py
+List_Randomizer.py
+Music_Metadata_Fetcher.py
