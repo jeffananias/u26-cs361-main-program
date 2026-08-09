@@ -31,10 +31,11 @@ def greet() -> None:
     print("                 Welcome to Playlist Editor!")
     print("                       by Jeff Ananias")
     print("")
-    print("This is a pre-release program with a limited feature set that")
-    print("allows users to select an existent playlist, add a song to it,")
-    print("and display it. Users must send commands in the local directory")
-    print("that contains the playlists and songs.")
+    print("This program creates, manages, and displays local music playlists.")
+    print("Users must send commands in the local directory that contains the")
+    print("playlists and songs they want to work with.")
+    print("")
+    print("To exit the program from a submenu, press Ctrl+C.")
     print("")
 
 
@@ -103,10 +104,17 @@ def create() -> None:
     print("")
 
     playlist_name = input("What will be your playlist name? ")
-    with open(playlist_name + ".m3u8", "w") as f:
-        f.write("")
-    print("Playlist created.")
-    sleep(2)
+    print(f"You named your playlist '{playlist_name}'.")
+    confirmation = input("Confirm with Y or deny with any other key: ")
+    if confirmation.lower() == "y":
+        with open(playlist_name + ".m3u8", "w") as f:
+            f.write("")
+        print("")
+        print("Playlist created. Returning to main menu.")
+        sleep(2)
+    else:
+        print("Playlist not created. Returning to main menu.")
+        sleep(2)
 
 
 def select() -> None:
@@ -163,6 +171,40 @@ def validate_selection(files: list, count: int) -> str:
         print("Choice not confirmed.")
 
 
+def create_song_list() -> list:
+    """
+    Create list of sorted music files in current path.
+    """
+    files = sorted(os.listdir(PATH))
+    music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
+    return [f for f in files if f.endswith(music_exts)]
+
+
+def print_song_list(menu: str, sel_playlist: str, songs: list) -> None:
+    """
+    Print enumerated music file names based on whether the list is for the add
+    menu or the remove menu.
+    """
+    match menu:
+        case "add":
+            with open(sel_playlist + ".m3u8") as f:
+                playlist_contents = f.read()
+                for i in range(len(songs)):
+                    # If song already in selected playlist, prepend asterisk
+                    if songs[i] in playlist_contents:
+                        print(f"({i + 1}) * {songs[i]}")
+                    else:
+                        print(f"({i + 1}) {songs[i]}")
+            print("")
+        case "remove":
+            with open(sel_playlist + ".m3u8") as f:
+                song_paths = f.readlines()
+                for i in range(len(song_paths)):
+                    song = re.search(r'[^\/]+$', song_paths[i])
+                    print(f"({i + 1}) {song.group(0)[:-1]}")
+            print("")
+
+
 def add(sel_playlist: str) -> None:
     """
     Show menu to user for addition of one or more songs to selected playlist.
@@ -178,27 +220,13 @@ def add(sel_playlist: str) -> None:
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
 
-    # Create list of sorted music files in current path
-    files = sorted(os.listdir(PATH))
-    music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
-    songs = [f for f in files if f.endswith(music_exts)]
-
-    # Print enumerated music file names
-    song_count = len(songs)
-    with open(sel_playlist + ".m3u8") as f:
-        playlist_contents = f.read()
-        for i in range(song_count):
-            # If song already in selected playlist, prepend asterisk
-            if songs[i] in playlist_contents:
-                print(f"({i + 1}) * {songs[i]}")
-            else:
-                print(f"({i + 1}) {songs[i]}")
-    print("")
+    songs = create_song_list()
+    print_song_list("add", sel_playlist, songs)
 
     # Validate user input and store additions
-    additions = validate_add_or_rem(songs, song_count)
+    additions = validate_add_or_rem(songs, len(songs))
     while additions is None:
-        additions = validate_add_or_rem(songs, song_count)
+        additions = validate_add_or_rem(songs, len(songs))
     add_count = len(additions)
     
     # Write additions to selected playlist
@@ -209,11 +237,11 @@ def add(sel_playlist: str) -> None:
     print("Done!")
     print("")
 
-"""
+
 def remove(sel_playlist: str) -> None:
-    
+    """
     Show menu to user for removal of one or more songs to selected playlist.
-    
+    """
     os.system("clear")
 
     print("* * *              REMOVE SONG FROM PLAYLIST              * * *")
@@ -224,24 +252,13 @@ def remove(sel_playlist: str) -> None:
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
 
-    # Create list of sorted music files in current path
-    files = sorted(os.listdir(path))
-    music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
-    songs = [f for f in files if f.endswith(music_exts)]
-
-    # Print enumerated music file names
-    song_count = len(songs)
-    with open(sel_playlist + ".m3u8") as f:
-        playlist_contents = f.read()
-        for i in range(song_count):
-            if songs[i] in playlist_contents:
-                print(f"({i + 1}) {songs[i]}")
-    print("")
+    songs = create_song_list()
+    print_song_list("remove", sel_playlist, songs)
 
     # Validate user input and store additions
-    removals = validate_add_or_rem(songs, song_count)
+    removals = validate_add_or_rem(songs, len(songs))
     while removals is None:
-        removals = validate_add_or_rem(songs, song_count)
+        removals = validate_add_or_rem(songs, len(songs))
     remove_count = len(removals)
     
     # Write additions to selected playlist
@@ -249,10 +266,10 @@ def remove(sel_playlist: str) -> None:
     with open(sel_playlist + ".m3u8", "w") as f:
         for song in songs:
             if song not in removals:
-                f.write(PATH + "/" + addition + "\n")
+                f.write(PATH + "/" + song + "\n")
     print("Done!")
     print("")
-"""
+
 
 def validate_add_or_rem(files: list, count: int) -> list:
     """
