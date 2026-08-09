@@ -65,7 +65,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     """
     if cmd != "create" and sel_playlist == None:
         print("Please select a playlist first.\n")
-        sleep(2)
+        sleep(3)
     else:
         match cmd:
             case "create":
@@ -110,11 +110,11 @@ def create() -> None:
         with open(playlist_name + ".m3u8", "w") as f:
             f.write("")
         print("")
-        print("Playlist created. Returning to main menu.")
-        sleep(2)
+        print("Playlist created! Returning to main menu.")
+        sleep(3)
     else:
         print("Playlist not created. Returning to main menu.")
-        sleep(2)
+        sleep(3)
 
 
 def select() -> None:
@@ -187,7 +187,7 @@ def get_pl_songs(sel_playlist: str) -> list:
     """
     pl_songs = []
 
-    with open(sel_playlist + ".m3u8") as f:
+    with open(sel_playlist + ".m3u8", "r") as f:
         song_paths = f.readlines()
         for i in range(len(song_paths)):
             song = re.search(r'[^\/]+$', song_paths[i])
@@ -203,7 +203,7 @@ def print_song_list(menu: str, sel_playlist: str, songs: list = []) -> None:
     """
     match menu:
         case "local":
-            with open(sel_playlist + ".m3u8") as f:
+            with open(sel_playlist + ".m3u8", "r") as f:
                 playlist_contents = f.read()
                 for i in range(len(songs)):
                     # If song already in selected playlist, prepend asterisk
@@ -274,7 +274,7 @@ def remove(sel_playlist: str) -> None:
     pl_songs = get_pl_songs(sel_playlist)
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can remove any.\n")
-        sleep(2)
+        sleep(3)
         return
     local_songs = get_local_songs()
 
@@ -352,17 +352,18 @@ def reorder(sel_playlist: str) -> None:
     print("")
 
     pl_songs = get_pl_songs(sel_playlist)
+
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can reorder them.\n")
-        sleep(2)
+        sleep(3)
         return
 
     choice_str = ""
-    while choice_str is not "done":
+    while True:
         print_song_list("playlist", sel_playlist)
         choice_str = input("Enter the numbers of two songs to swap: ")
         if choice_str == "done":
-            continue
+            break
         choice_list = validate_choice(choice_str, pl_songs, len(pl_songs))
         if len(choice_list) != 2:
             print("You must select two songs to swap. Try again.\n")
@@ -373,6 +374,10 @@ def reorder(sel_playlist: str) -> None:
             with open(sel_playlist + ".m3u8", "w") as f:
                 for pl_song in pl_songs:
                     f.write(PATH + "/" + pl_song + "\n")
+
+    print("")
+    print("Reorder complete! Returning to main menu.")
+    sleep(3)
 
     return
 
@@ -392,7 +397,7 @@ def display(sel_playlist: str) -> None:
     print("")
 
     # Print each line in playlist but only contents after last slash
-    with open(sel_playlist + ".m3u8") as f:
+    with open(sel_playlist + ".m3u8", "r") as f:
         song_paths = f.readlines()
         for song_path in song_paths:
             song = re.search(r'[^\/]+$', song_path)
@@ -400,6 +405,58 @@ def display(sel_playlist: str) -> None:
     print("")
 
     go_back = input("Press ENTER to go back.")
+
+
+def shuffle(sel_playlist: str) -> None:
+    """
+    Write randomized order of songs in selected playlist.
+    """
+    os.system("clear")
+
+    print("* * *                  SHUFFLE SONGS                      * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you shuffle songs in the selected playlist.  *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+    print("Pre-shuffle order:\n")
+
+    pl_songs = get_pl_songs(sel_playlist)
+    
+    if len(pl_songs) == 0:
+        print("This playlist must contain songs before you can reorder them.\n")
+        sleep(3)
+        return
+
+    print_song_list("playlist", sel_playlist)
+
+    preshuffle_order = None
+    postshuffle_order = None
+
+    with open(sel_playlist + ".m3u8", "r") as f:
+        preshuffle_order = f.read()
+
+    with open("list_randomizer.txt", "w") as f:
+        f.write(preshuffle_order)
+
+    sleep(2)
+
+    with open("list_randomizer.txt", "r") as f:
+        postshuffle_order = f.read()
+
+    with open(sel_playlist + ".m3u8", "w") as f:
+        f.write(postshuffle_order)
+
+    print("")
+    print("Post-shuffle order:")
+
+    print_song_list("playlist", sel_playlist)
+
+    print("Shuffle complete! Returning to main menu.")
+
+    with open("list_randomizer.txt", "w") as f:
+        f.write("")
+
+    sleep(3)
 
 
 def main() -> None:
