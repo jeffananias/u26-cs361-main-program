@@ -135,7 +135,7 @@ def select() -> None:
     playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
 
     playlist_count = len(playlists)
-    if len(playlist_count) == 0:
+    if playlist_count == 0:
         print("At least one playlist must exist in this directory.")
         print("Please create a playlist.")
         print("Returning to main menu.")
