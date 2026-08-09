@@ -171,22 +171,38 @@ def validate_selection(files: list, count: int) -> str:
         print("Choice not confirmed.")
 
 
-def create_song_list() -> list:
+def get_local_songs() -> list:
     """
     Create list of sorted music files in current path.
     """
     files = sorted(os.listdir(PATH))
     music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
-    return [f for f in files if f.endswith(music_exts)]
+    local_songs = [f for f in files if f.endswith(music_exts)]
+    return local_songs
 
 
-def print_song_list(menu: str, sel_playlist: str, songs: list) -> None:
+def get_pl_songs(sel_playlist: str) -> list:
     """
-    Print enumerated music file names based on whether the list is for the add
-    menu or the remove menu.
+    Create list of songs in the selected playlist.
+    """
+    pl_songs = []
+
+    with open(sel_playlist + ".m3u8") as f:
+        song_paths = f.readlines()
+        for i in range(len(song_paths)):
+            song = re.search(r'[^\/]+$', song_paths[i])
+            pl_songs.append(song.group(0)[:-1])
+
+    return pl_songs
+
+
+def print_song_list(menu: str, sel_playlist: str, songs: list = []) -> None:
+    """
+    Print enumerated music file names either from the local directory or the
+    selected playlist.
     """
     match menu:
-        case "add":
+        case "local":
             with open(sel_playlist + ".m3u8") as f:
                 playlist_contents = f.read()
                 for i in range(len(songs)):
@@ -196,12 +212,10 @@ def print_song_list(menu: str, sel_playlist: str, songs: list) -> None:
                     else:
                         print(f"({i + 1}) {songs[i]}")
             print("")
-        case "remove":
-            with open(sel_playlist + ".m3u8") as f:
-                song_paths = f.readlines()
-                for i in range(len(song_paths)):
-                    song = re.search(r'[^\/]+$', song_paths[i])
-                    print(f"({i + 1}) {song.group(0)[:-1]}")
+        case "playlist":
+            pl_songs = get_pl_songs(sel_playlist)
+            for i in range(len(pl_songs)):
+                print(f"({i + 1}) {pl_songs[i]}")
             print("")
 
 
@@ -220,13 +234,17 @@ def add(sel_playlist: str) -> None:
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
 
-    songs = create_song_list()
-    print_song_list("add", sel_playlist, songs)
+    songs = get_local_songs()
+    print_song_list("local", sel_playlist, songs)
 
-    # Validate user input and store additions
-    additions = validate_add_or_rem(songs, len(songs))
-    while additions is None:
-        additions = validate_add_or_rem(songs, len(songs))
+    # Validate and confirm user input and store additions
+    choice_list = None
+    additions = None
+    while choice_list is None:
+        choice_str = input("Enter number(s) to choose song(s): ")
+        choice_list = validate_choice(choice_str, songs, len(songs))
+        if choice_list is not None:
+            additions = confirm_choice(choice_list, songs)
     add_count = len(additions)
     
     # Write additions to selected playlist
@@ -252,58 +270,111 @@ def remove(sel_playlist: str) -> None:
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
 
-    songs = create_song_list()
-    print_song_list("remove", sel_playlist, songs)
+    print_song_list("playlist", sel_playlist)
+    pl_songs = get_pl_songs(sel_playlist)
+    if len(pl_songs) == 0:
+        print("This playlist must contain songs before you can remove any.\n")
+        sleep(2)
+        return
+    local_songs = get_local_songs()
 
-    # Validate user input and store additions
-    removals = validate_add_or_rem(songs, len(songs))
-    while removals is None:
-        removals = validate_add_or_rem(songs, len(songs))
+    # Validate and confirm user input and store removals
+    choice_list = None
+    removals = None
+    while choice_list is None:
+        choice_str = input("Enter number(s) to choose song(s): ")
+        choice_list = validate_choice(choice_str, pl_songs, len(pl_songs))
+        if choice_list is not None:
+            removals = confirm_choice(choice_list, pl_songs)
     remove_count = len(removals)
     
     # Write additions to selected playlist
     print("Removing song(s) from playlist...")
     with open(sel_playlist + ".m3u8", "w") as f:
-        for song in songs:
-            if song not in removals:
-                f.write(PATH + "/" + song + "\n")
+        for local_song in local_songs:
+            if local_song not in removals:
+                f.write(PATH + "/" + local_song + "\n")
     print("Done!")
     print("")
 
 
-def validate_add_or_rem(files: list, count: int) -> list:
+def validate_choice(choice_str: str, files: list, count: int) -> list:
     """
-    Validate user input for addition or removal of one or more songs to
-    selected playlist.
+    Validate user input for choice of one or more songs.
     """
     # Ensure string input is series of comma-delimited integers
-    choices = input("Enter number(s) to choose song(s): ")
     pattern = re.compile(r'^\s*\d+\s*(?:,\s*\d+\s*)*$')
-    if pattern.match(choices) is None:
+    if pattern.match(choice_str) is None:
         print("Invalid syntax.")
-        return
+        return False
 
     # Ensure list of input integers is within range of options
-    choices = [int(choice) for choice in choices.split(",")]
-    for choice in choices:
-        if choice < 1 or choice > count:
+    choice_list = [int(choice) for choice in choice_str.split(",")]
+    for choice_item in choice_list:
+        if choice_item < 1 or choice_item > count:
             print("Invalid choice(s). Only use available numbers.")
-            return
+            return False
 
-    # Confirm choices and return them
+    return choice_list
+
+
+def confirm_choice(choice_list: list, files: list) -> list:
+    """
+    Confirm user input for choice or one or more songs.
+    """
     print("")
     print("You chose the following song(s):")
-    for choice in choices:
-        print(f"{files[choice - 1]}")
+    for choice_item in choice_list:
+        print(f"{files[choice_item - 1]}")
     confirmation = input("Confirm with Y or deny with any other key: ")
     if confirmation.lower() == "y":
         print("")
-        adds_or_rems = []
-        for choice in choices:
-            adds_or_rems.append(files[choice - 1])
-        return adds_or_rems
+        confirmed_choices = []
+        for choice_item in choice_list:
+            confirmed_choices.append(files[choice_item - 1])
+        return confirmed_choices
     else:
         print("Choice not confirmed.")
+
+
+def reorder(sel_playlist: str) -> None:
+    """
+    Swap items in the playlist to reorder them.
+    """
+    os.system("clear")
+
+    print("* * *                   REORDER SONGS                     * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you reorder songs in the selected playlist.  *")
+    print("* Enter two number separated by a comma to swap the songs     *")
+    print("* next to those numbers. Enter 'done' to go to the main menu. *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+    pl_songs = get_pl_songs(sel_playlist)
+    if len(pl_songs) == 0:
+        print("This playlist must contain songs before you can reorder them.\n")
+        sleep(2)
+        return
+
+    choice_str = ""
+    while choice_str is not "done":
+        print_song_list("playlist", sel_playlist)
+        choice_str = input("Enter the numbers of two songs to swap: ")
+        if choice_str == "done":
+            continue
+        choice_list = validate_choice(choice_str, pl_songs, len(pl_songs))
+        if len(choice_list) != 2:
+            print("You must select two songs to swap. Try again.\n")
+        else:
+            [first_song, second_song] = confirm_choice(choice_list, pl_songs)
+            pl_songs[choice_list[0] - 1] = second_song
+            pl_songs[choice_list[1] - 1] = first_song
+            with open(sel_playlist + ".m3u8", "w") as f:
+                for pl_song in pl_songs:
+                    f.write(PATH + "/" + pl_song + "\n")
+
+    return
 
 
 def display(sel_playlist: str) -> None:
