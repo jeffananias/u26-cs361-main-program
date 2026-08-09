@@ -134,8 +134,15 @@ def select() -> None:
     files = sorted(os.listdir(PATH))
     playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
 
-    # Print enumerated playlist file names
     playlist_count = len(playlists)
+    if len(playlist_count) == 0:
+        print("At least one playlist must exist in this directory.")
+        print("Please create a playlist.")
+        print("Returning to main menu.")
+        sleep(3)
+        return
+
+    # Print enumerated playlist file names
     for i in range(playlist_count):
         print(f"({i + 1}) {playlists[i]}")
     print("")
