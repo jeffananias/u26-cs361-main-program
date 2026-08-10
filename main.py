@@ -2,9 +2,10 @@
 # Course: CS 361
 # Due Date: 2026-08-10
 # Description: This file provides a command-line interface for a user to
-#              select a playlist, add a playlist, display the selected
-#              playlist, and exit the interface. Playlists are .m3u8 files
-#              and store songs of .mp3, .wav, .flac, .aac, and .ogg format.
+#              create, manage, and display local music playlists.
+#
+#              Playlists are .m3u8 files and store songs of .mp3, .wav,
+#              .flac, .aac, and .ogg format.
 
 import os
 import re
@@ -409,6 +410,11 @@ def main() -> None:
                 route_cmd(cmd, sel_playlist)
 
 
+# ----------------------------------------------------------------------------
+#                        All greet functions are below
+# ----------------------------------------------------------------------------
+
+
 def greet_main() -> None:
     """
     Show informative greeting for user at the main menu.
@@ -520,32 +526,60 @@ def greet_shuffle() -> None:
     print("")
 
 
-def greet_duplicate() -> None:
+def greet_duplicate(sel_playlist: str) -> None:
     """
     Show informative greeting for user at the duplicate menu.
     """
-    pass
+    print("* * *                DUPLICATE PLAYLIST                   * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu confirms whether you want to duplicate your       *")
+    print("* selected playlist.                                          *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+    print(f"Selected playlist: {sel_playlist}")
+    print("")
 
 
 def greet_delete() -> None:
     """
     Show informative greeting for user at the delete menu.
     """
-    pass
+    print("* * *                  DELETE PLAYLIST                    * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu confirms whether you want to delete your          *")
+    print("* selected playlist.                                          *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+    print(f"Selected playlist: {sel_playlist}")
+    print("")
 
 
 def greet_batch() -> None:
     """
     Show informative greeting for user at the batch menu.
     """
-    pass
+    print("* * *             BATCH ADD SONGS TO PLAYLIST             * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you add a batch of songs to the selected     *")
+    print("* playlist. Choose the metadata tag and then type your        *")
+    print("* desired tag contents to automatically add all songs whose   *")
+    print("* metadata tag matches the string you entered.                *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
 
 
 def greet_sort() -> None:
     """
     Show informative greeting for user at the sort menu.
     """
-    pass
+    print("* * *               SORT SONGS IN PLAYLIST                * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you sort the songs in the selected playlist. *")
+    print("* Choose the metadata tag, type your desired tag contents,    *")
+    print("* and choose ascending or descending to automatically sort    *")
+    print("* the songs per your specifications.                          *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
 
 
 if __name__ == '__main__':
