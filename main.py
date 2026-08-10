@@ -51,8 +51,6 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
                 shuffle(sel_playlist)
             case "duplicate":
                 duplicate(sel_playlist)
-            case "delete":
-                delete(sel_playlist)
             case "batch":
                 add_batch(sel_playlist)
             case "sort":
@@ -406,16 +404,40 @@ def duplicate(sel_playlist: str) -> None:
         print("Starting duplication...")
     else:
         print("Duplication not confirmed. Returning to main menu.")
+        time.sleep(3)
         return
 
-    playlist_file = PATH + "/" + sel_playlist
+    pl_file = PATH + "/" + sel_playlist
     i = 1
     ext = ".m3u8"
-    while os.path.exists(playlist_file + " " + str(i) + ext):
+    while os.path.exists(pl_file + " " + str(i) + ".m3u8"):
         i += 1
-    shutil.copy2(playlist_file + ".m3u8", playlist_file + " " + str(i) + ext)
+    shutil.copy2(pl_file + ".m3u8", pl_file + " " + str(i) + ".m3u8")
 
     print("Duplication complete! Returning to main menu.")
+    time.sleep(3)
+
+    return
+
+
+def delete(sel_playlist: str) -> str or None:
+    """
+    Delete the selected playlist from the local directory.
+    """
+    os.system("clear")
+    greet_delete(sel_playlist)
+
+    confirmation = input("Confirm with Y or deny with any other key: ")
+    if confirmation.lower() == "y":
+        print("Starting deletion...")
+    else:
+        print("Deletion not confirmed. Returning to main menu.")
+        time.sleep(3)
+        return sel_playlist
+
+    os.remove(PATH + "/" + sel_playlist + ".m3u8")
+
+    print("Deletion complete! Returning to main menu.")
     time.sleep(3)
 
     return
@@ -451,6 +473,8 @@ def main() -> None:
         cmd = prompt()
         if cmd == "select":
             sel_playlist = select()
+        elif cmd == "delete":
+            sel_playlist = delete(sel_playlist)
         else:
             route_cmd(cmd, sel_playlist)
 
@@ -585,7 +609,7 @@ def greet_duplicate(sel_playlist: str) -> None:
     print("")
 
 
-def greet_delete() -> None:
+def greet_delete(sel_playlist: str) -> None:
     """
     Show informative greeting for user at the delete menu.
     """
