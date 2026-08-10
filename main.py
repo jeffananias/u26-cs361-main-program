@@ -9,8 +9,9 @@
 
 import os
 import re
-from time import sleep
-from shutil import copy2
+import time
+import shutil
+import datetime
 
 
 PATH = os.getcwd()
@@ -31,8 +32,9 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     Route user input command to intended function with selected playlist.
     """
     if cmd != "create" and sel_playlist == None:
-        print("First select a playlist.\n")
-        sleep(3)
+        print("")
+        print("Remember to first select a playlist. Reloading main menu...\n")
+        time.sleep(3)
     else:
         match cmd:
             case "create":
@@ -74,10 +76,10 @@ def create() -> None:
             f.write("")
         print("")
         print("Playlist created! Returning to main menu.")
-        sleep(3)
+        time.sleep(3)
     else:
         print("Playlist not created. Returning to main menu.")
-        sleep(3)
+        time.sleep(3)
 
 
 def select() -> None:
@@ -97,7 +99,7 @@ def select() -> None:
         print("At least one playlist must exist in this directory.")
         print("Please create a playlist.")
         print("Returning to main menu.")
-        sleep(3)
+        time.sleep(3)
         return
 
     # Print enumerated playlist file names
@@ -229,7 +231,7 @@ def remove(sel_playlist: str) -> None:
     pl_songs = get_pl_songs(sel_playlist)
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can remove any.\n")
-        sleep(3)
+        time.sleep(3)
         return
     local_songs = get_local_songs()
 
@@ -304,7 +306,7 @@ def reorder(sel_playlist: str) -> None:
 
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can reorder them.\n")
-        sleep(3)
+        time.sleep(3)
         return
 
     choice_str = ""
@@ -326,7 +328,7 @@ def reorder(sel_playlist: str) -> None:
 
     print("")
     print("Reorder complete! Returning to main menu.")
-    sleep(3)
+    time.sleep(3)
 
     return
 
@@ -357,7 +359,7 @@ def shuffle(sel_playlist: str) -> None:
     
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can reorder them.\n")
-        sleep(3)
+        time.sleep(3)
         return
 
     print_song_list("playlist", sel_playlist)
@@ -371,7 +373,7 @@ def shuffle(sel_playlist: str) -> None:
     with open("list_randomizer.txt", "w") as f:
         f.write(preshuffle_order)
 
-    sleep(2)
+    time.sleep(2)
 
     with open("list_randomizer.txt", "r") as f:
         postshuffle_order = f.read()
@@ -389,13 +391,14 @@ def shuffle(sel_playlist: str) -> None:
     with open("list_randomizer.txt", "w") as f:
         f.write("")
 
-    sleep(3)
+    time.sleep(3)
 
 
 def duplicate(sel_playlist: str) -> None:
     """
     Write a new playlist file identical to the selected playlist.
     """
+    os.system("clear")
     greet_duplicate(sel_playlist)
 
     confirmation = input("Confirm with Y or deny with any other key: ")
@@ -405,11 +408,15 @@ def duplicate(sel_playlist: str) -> None:
         print("Duplication not confirmed. Returning to main menu.")
         return
 
-    copy2(PATH + sel_playlist + ".m3u8", PATH)
+    playlist_file = PATH + "/" + sel_playlist
+    i = 1
+    ext = ".m3u8"
+    while os.path.exists(playlist_file + " " + str(i) + ext):
+        i += 1
+    shutil.copy2(playlist_file + ".m3u8", playlist_file + " " + str(i) + ext)
 
-    print("")
     print("Duplication complete! Returning to main menu.")
-    sleep(3)
+    time.sleep(3)
 
     return
 
@@ -437,6 +444,10 @@ def main() -> None:
     while True:
         os.system("clear")
         greet_main()
+        if sel_playlist == None:
+            print("First select a playlist.\n")
+        else:
+            print(f"Your selected playlist is {sel_playlist}.\n")
         cmd = prompt()
         if cmd == "select":
             sel_playlist = select()
