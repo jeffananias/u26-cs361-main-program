@@ -10,6 +10,7 @@
 import os
 import re
 from time import sleep
+from shutil import copy2
 
 
 PATH = os.getcwd()
@@ -391,6 +392,42 @@ def shuffle(sel_playlist: str) -> None:
     sleep(3)
 
 
+def duplicate(sel_playlist: str) -> None:
+    """
+    Write a new playlist file identical to the selected playlist.
+    """
+    greet_duplicate(sel_playlist)
+
+    confirmation = input("Confirm with Y or deny with any other key: ")
+    if confirmation.lower() == "y":
+        print("Starting duplication...")
+    else:
+        print("Duplication not confirmed. Returning to main menu.")
+        return
+
+    copy2(PATH + sel_playlist + ".m3u8", PATH)
+
+    print("")
+    print("Duplication complete! Returning to main menu.")
+    sleep(3)
+
+    return
+
+
+def batch(sel_playlist: str) -> None:
+    """
+    Write to the selected playlist all songs that match a metadata search.
+    """
+    pass
+
+
+def sort(sel_playlist: str) -> None:
+    """
+    Write to the selected playlist all songs sorted by a metadata tag.
+    """
+    pass
+
+
 def main() -> None:
     """
     Provide command-line interface to user.
@@ -399,15 +436,12 @@ def main() -> None:
 
     while True:
         os.system("clear")
-        greet()
-        if sel_playlist == None:
-            print("First select a playlist.")
+        greet_main()
+        cmd = prompt()
+        if cmd == "select":
+            sel_playlist = select()
         else:
-            cmd = prompt()
-            if cmd == "select":
-                sel_playlist = select()
-            else:
-                route_cmd(cmd, sel_playlist)
+            route_cmd(cmd, sel_playlist)
 
 
 # ----------------------------------------------------------------------------
