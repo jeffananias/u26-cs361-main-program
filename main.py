@@ -84,6 +84,11 @@ def create(sel_playlist: str) -> None:
         with open("ascii_confirmation_generator.txt", "r") as f:
             print(f.read())
         print("Playlist created! Returning to main menu.")
+
+        # Clean microservice text file
+        with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("")
+
         time.sleep(3)
         return sel_playlist
     else:
@@ -405,6 +410,9 @@ def shuffle(sel_playlist: str) -> None:
 
     print("Shuffle complete! Returning to main menu.")
 
+    # Clean microservice text files
+    with open("ascii_confirmation_generator.txt", "w") as f:
+        f.write("")
     with open("list_randomizer.txt", "w") as f:
         f.write("")
 
@@ -566,7 +574,11 @@ def batch_add(sel_playlist: str) -> None:
     time.sleep(2)
     with open("ascii_confirmation_generator.txt", "r") as f:
         print(f.read())
+    
+    # Clean microservice text files
     with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("")
+    with open("music_metadata.txt", "w") as f:
             f.write("")
 
     print("Batch addition complete! Returning to main menu.")
@@ -599,6 +611,10 @@ def find_stale_playlists() -> None:
             days = int(response[1])
             if status == "OVERDUE:" and days > 7:
                 print(playlist) 
+
+    # Clean microservice text file
+    with open("date_diff.txt", "w") as f:
+        f.write("")
 
     print("")
     go_back = input("Press ENTER to go back.")
