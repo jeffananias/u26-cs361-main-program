@@ -59,7 +59,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
             case "batch":
                 return batch_add(sel_playlist)
             case "stale":
-                return find_stale_playlists()
+                return find_stale_playlists(sel_playlist)
             case 'exit':
                 exit()
             case _:
@@ -587,7 +587,7 @@ def batch_add(sel_playlist: str) -> None:
     return sel_playlist
 
 
-def find_stale_playlists() -> None:
+def find_stale_playlists(sel_playlist: str) -> None:
     """
     Print stale playlists that have not been updated in more than 7 days.
     """
