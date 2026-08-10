@@ -153,13 +153,10 @@ def get_pl_songs(sel_playlist: str) -> list:
     pl_songs = []
 
     with open(sel_playlist + ".m3u8", "r") as f:
-        song_paths = f.readlines()
+        song_paths = f.read().splitlines()
         for i in range(len(song_paths)):
             song = re.search(r'[^\/]+$', song_paths[i])
-            if song.group(0)[-1] == '\n':
-                pl_songs.append(song.group(0)[:-1])
-            else:
-                pl_songs.append(song.group(0))
+            pl_songs.append(song.group(0))
 
     return pl_songs
 
@@ -447,14 +444,22 @@ def batch(sel_playlist: str) -> None:
     """
     Write to the selected playlist all songs that match a metadata search.
     """
-    pass
+    os.system("clear")
+    greet_batch()
+
+    songs = get_local_songs()
+
+    print("Metadata types: 'artist', 'album', 'genre', 'year'")
+    metadata_type = input("Choose the type of metadata you want to search: ")
+
 
 
 def sort(sel_playlist: str) -> None:
     """
     Write to the selected playlist all songs sorted by a metadata tag.
     """
-    pass
+    os.system("clear")
+    greet_sort()
 
 
 def main() -> None:
