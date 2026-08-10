@@ -31,7 +31,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     """
     Route user input command to intended function with selected playlist.
     """
-    excluded_from_check = ["create", "stale", "exit"]
+    excluded_from_check = ["create", "select", "delete", "stale", "exit"]
     if cmd not in excluded_from_check and sel_playlist == None:
         print("")
         print("Remember to first select a playlist. Reloading main menu...\n")
@@ -39,30 +39,34 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     else:
         match cmd:
             case "create":
-                create()
+                return create(sel_playlist)
+            case "select":
+                return select()
             case "add":
-                add(sel_playlist)
+                return add(sel_playlist)
             case "remove":
-                remove(sel_playlist)
+                return remove(sel_playlist)
             case "reorder":
-                reorder(sel_playlist)
+                return reorder(sel_playlist)
             case "display":
-                display(sel_playlist)
+                return display(sel_playlist)
             case "shuffle":
-                shuffle(sel_playlist)
+                return shuffle(sel_playlist)
             case "duplicate":
-                duplicate(sel_playlist)
+                return duplicate(sel_playlist)
+            case "delete":
+                return delete(sel_playlist)
             case "batch":
-                batch_add(sel_playlist)
+                return batch_add(sel_playlist)
             case "stale":
-                find_stale_playlists()
+                return find_stale_playlists()
             case 'exit':
                 exit()
             case _:
                 print("Invalid command.")
 
 
-def create() -> None:
+def create(sel_playlist: str) -> None:
     os.system("clear")
 
     greet_create()
@@ -81,12 +85,14 @@ def create() -> None:
             print(f.read())
         print("Playlist created! Returning to main menu.")
         time.sleep(3)
+        return sel_playlist
     else:
         print("Playlist not created. Returning to main menu.")
         time.sleep(3)
+        return sel_playlist
 
 
-def select() -> None:
+def select() -> str or None:
     """
     Show menu to user for selection of playlist.
     """
@@ -103,7 +109,7 @@ def select() -> None:
         print("At least one playlist must exist in this directory.")
         print("Please create a playlist.")
         print("Returning to main menu.")
-        time.sleep(2)
+        time.sleep(3)
         return
 
     # Print enumerated playlist file names
@@ -123,7 +129,7 @@ def select() -> None:
 
 def validate_selection(files: list, count: int) -> str:
     """
-    Validate user input for playlist selection.
+    Validate user input for playlist selection or deletion.
     """
     # Ensure input is number within range of options
     choice = input("Enter number to select: ")
@@ -219,6 +225,7 @@ def add(sel_playlist: str) -> None:
     print("Done!")
     print("")
     time.sleep(3)
+    return sel_playlist
 
 
 def remove(sel_playlist: str) -> None:
@@ -234,8 +241,7 @@ def remove(sel_playlist: str) -> None:
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can remove any.\n")
         time.sleep(3)
-        return
-    local_songs = get_local_songs()
+        return sel_playlist
 
     # Validate and confirm user input and store removals
     choice_list = None
@@ -250,12 +256,13 @@ def remove(sel_playlist: str) -> None:
     # Write additions to selected playlist
     print("Removing song(s) from playlist...")
     with open(sel_playlist + ".m3u8", "w") as f:
-        for local_song in local_songs:
-            if local_song not in removals:
-                f.write(PATH + "/" + local_song + "\n")
+        for pl_song in pl_songs:
+            if pl_song not in removals:
+                f.write(PATH + "/" + pl_song + "\n")
     print("Done!")
     print("")
     time.sleep(3)
+    return sel_playlist
 
 
 def validate_choice(choice_str: str, files: list, count: int) -> list:
@@ -310,7 +317,7 @@ def reorder(sel_playlist: str) -> None:
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can reorder them.\n")
         time.sleep(3)
-        return
+        return sel_playlist
 
     choice_str = ""
     while True:
@@ -333,7 +340,7 @@ def reorder(sel_playlist: str) -> None:
     print("Reorder complete! Returning to main menu.")
     time.sleep(3)
 
-    return
+    return sel_playlist
 
 
 def display(sel_playlist: str) -> None:
@@ -348,6 +355,7 @@ def display(sel_playlist: str) -> None:
     print("")
 
     go_back = input("Press ENTER to go back.")
+    return sel_playlist
 
 
 def shuffle(sel_playlist: str) -> None:
@@ -363,7 +371,7 @@ def shuffle(sel_playlist: str) -> None:
     if len(pl_songs) == 0:
         print("This playlist must contain songs before you can reorder them.\n")
         time.sleep(3)
-        return
+        return sel_playlist
 
     print_song_list("playlist", sel_playlist)
 
@@ -401,6 +409,7 @@ def shuffle(sel_playlist: str) -> None:
         f.write("")
 
     time.sleep(3)
+    return sel_playlist
 
 
 def duplicate(sel_playlist: str) -> None:
@@ -416,7 +425,7 @@ def duplicate(sel_playlist: str) -> None:
     else:
         print("Duplication not confirmed. Returning to main menu.")
         time.sleep(3)
-        return
+        return sel_playlist
 
     pl_file = PATH + "/" + sel_playlist
     i = 1
@@ -428,15 +437,32 @@ def duplicate(sel_playlist: str) -> None:
     print("Duplication complete! Returning to main menu.")
     time.sleep(3)
 
-    return
+    return sel_playlist
 
 
-def delete(sel_playlist: str) -> str or None:
+def delete(sel_playlist) -> str or None:
     """
     Delete the selected playlist from the local directory.
     """
     os.system("clear")
-    greet_delete(sel_playlist)
+    greet_delete()
+
+    files = sorted(os.listdir(PATH))
+    playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
+    playlist_count = len(playlists)
+
+    for i in range(playlist_count):
+        print(f"({i + 1}) {playlists[i]}")
+    
+    print("")
+
+    pl_to_del = input("Enter number to select: ")
+    while pl_to_del.isnumeric() is False or \
+        int(pl_to_del) < 1 or \
+        int(pl_to_del) > playlist_count:
+        print("Invalid choice.")
+        pl_to_del = input("Enter number to select: ")
+    pl_to_del = int(pl_to_del)
 
     confirmation = input("Confirm with Y or deny with any other key: ")
     if confirmation.lower() == "y":
@@ -446,12 +472,15 @@ def delete(sel_playlist: str) -> str or None:
         time.sleep(3)
         return sel_playlist
 
-    os.remove(PATH + "/" + sel_playlist + ".m3u8")
+    os.remove(PATH + "/" + playlists[pl_to_del - 1] + ".m3u8")
 
     print("Deletion complete! Returning to main menu.")
     time.sleep(3)
 
-    return
+    if playlists[pl_to_del - 1] == sel_playlist:
+        return None
+    else:
+        return sel_playlist
 
 
 def batch_add(sel_playlist: str) -> None:
@@ -511,7 +540,7 @@ def batch_add(sel_playlist: str) -> None:
     else:
         print("Batch addition not confirmed. Returning to main menu.")
         time.sleep(3)
-        return
+        return sel_playlist
 
     songs_to_add = []
     with open("music_metadata.txt", "r") as f:
@@ -537,11 +566,13 @@ def batch_add(sel_playlist: str) -> None:
     time.sleep(2)
     with open("ascii_confirmation_generator.txt", "r") as f:
         print(f.read())
+    with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("")
 
     print("Batch addition complete! Returning to main menu.")
     time.sleep(3)
 
-    return
+    return sel_playlist
 
 
 def find_stale_playlists() -> None:
@@ -571,6 +602,7 @@ def find_stale_playlists() -> None:
 
     print("")
     go_back = input("Press ENTER to go back.")
+    return sel_playlist
 
 
 def main() -> None:
@@ -587,12 +619,7 @@ def main() -> None:
         else:
             print(f"Your selected playlist is {sel_playlist}.\n")
         cmd = prompt()
-        if cmd == "select":
-            sel_playlist = select()
-        elif cmd == "delete":
-            sel_playlist = delete(sel_playlist)
-        else:
-            route_cmd(cmd, sel_playlist)
+        sel_playlist = route_cmd(cmd, sel_playlist)
 
 
 # ----------------------------------------------------------------------------
@@ -725,17 +752,14 @@ def greet_duplicate(sel_playlist: str) -> None:
     print("")
 
 
-def greet_delete(sel_playlist: str) -> None:
+def greet_delete() -> None:
     """
     Show informative greeting for user at the delete menu.
     """
     print("* * *                  DELETE PLAYLIST                    * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu confirms whether you want to delete your          *")
-    print("* selected playlist.                                          *")
+    print("* This menu lets you delete one of your playlists.            *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-    print(f"Selected playlist: {sel_playlist}")
     print("")
 
 
