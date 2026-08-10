@@ -14,41 +14,6 @@ from time import sleep
 PATH = os.getcwd()
 
 
-def greet() -> None:
-    """
-    Show informative greeting for user.
-    """
-    print("")
-    print("           ____ ____ ____ ____ ____ ____ ____ ____ ")
-    print("          ||P |||L |||A |||Y |||L |||I |||S |||T ||")
-    print("          ||__|||__|||__|||__|||__|||__|||__|||__||")
-    print("          |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
-    print("                ____ ____ ____ ____ ____ ____ ")
-    print("               ||E |||D |||I |||T |||O |||R ||")
-    print("               ||__|||__|||__|||__|||__|||__||")
-    print("               |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
-    print("")
-    print("                 Welcome to Playlist Editor!")
-    print("                       by Jeff Ananias")
-    print("")
-    print("This program creates, manages, and displays local music playlists.")
-    print("Users must send commands in the local directory that contains the")
-    print("playlists and songs they want to work with.")
-    print("")
-    print("To exit the program from a submenu, press Ctrl+C.")
-    print("")
-
-
-def check_selection(sel_playlist: str) -> None:
-    """
-    Tell user to select playlist if none selected.
-    """
-    if sel_playlist == None:
-        print(f"First select a playlist.\n")
-    else:
-        print(f"Your selected playlist is {sel_playlist}.\n")
-
-
 def prompt() -> str:
     """
     Prompt user with instructions.
@@ -64,7 +29,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     Route user input command to intended function with selected playlist.
     """
     if cmd != "create" and sel_playlist == None:
-        print("Please select a playlist first.\n")
+        print("First select a playlist.\n")
         sleep(3)
     else:
         match cmd:
@@ -97,11 +62,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
 def create() -> None:
     os.system("clear")
 
-    print("* * *                   CREATE PLAYLIST                   * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you create a playlist file.                  *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_create()
 
     playlist_name = input("What will be your playlist name? ")
     print(f"You named your playlist '{playlist_name}'.")
@@ -123,12 +84,7 @@ def select() -> None:
     """
     os.system("clear")
 
-    print("* * *                   SELECT PLAYLIST                   * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you select a playlist to then edit to        *")
-    print("* contain any songs you want in any order that you specify.   *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_select()
 
     # Create list of sorted .m3u8 files in current path
     files = sorted(os.listdir(PATH))
@@ -235,14 +191,7 @@ def add(sel_playlist: str) -> None:
     """
     os.system("clear")
 
-    print("* * *                ADD SONG TO PLAYLIST                 * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you add one or more songs to the selected    *")
-    print("* playlist. To add more than one song, enter multiple         *")
-    print("* numbers separated by commas. Stars indicate that the song   *")
-    print("* is already in the playlist.                                 *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_add()
 
     songs = get_local_songs()
     print_song_list("local", sel_playlist, songs)
@@ -272,13 +221,7 @@ def remove(sel_playlist: str) -> None:
     """
     os.system("clear")
 
-    print("* * *              REMOVE SONG FROM PLAYLIST              * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you remove one or more songs from the        *")
-    print("* selected playlist. To remove more than one song, enter      *")
-    print("* multiple numbers separated by commas.                       *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_remove()
 
     print_song_list("playlist", sel_playlist)
     pl_songs = get_pl_songs(sel_playlist)
@@ -353,13 +296,7 @@ def reorder(sel_playlist: str) -> None:
     """
     os.system("clear")
 
-    print("* * *                   REORDER SONGS                     * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you reorder songs in the selected playlist.  *")
-    print("* Enter two number separated by a comma to swap the songs     *")
-    print("* next to those numbers. Enter 'done' to go to the main menu. *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_reorder()
 
     pl_songs = get_pl_songs(sel_playlist)
 
@@ -398,13 +335,7 @@ def display(sel_playlist: str) -> None:
     """
     os.system("clear")
 
-    print("* * *                   DISPLAY PLAYLIST                  * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This page displays the contents of the selected playlist.   *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-    print(f"{sel_playlist} Playlist:")
-    print("")
+    greet_display(sel_playlist)
 
     print_song_list("playlist", sel_playlist)
     print("")
@@ -417,12 +348,7 @@ def shuffle(sel_playlist: str) -> None:
     Write randomized order of songs in selected playlist.
     """
     os.system("clear")
-
-    print("* * *                  SHUFFLE SONGS                      * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you shuffle songs in the selected playlist.  *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
+    greet_shuffle()
     print("Pre-shuffle order:\n")
 
     pl_songs = get_pl_songs(sel_playlist)
@@ -473,12 +399,153 @@ def main() -> None:
     while True:
         os.system("clear")
         greet()
-        check_selection(sel_playlist)
-        cmd = prompt()
-        if cmd == "select":
-            sel_playlist = select()
+        if sel_playlist == None:
+            print("First select a playlist.")
         else:
-            route_cmd(cmd, sel_playlist)
+            cmd = prompt()
+            if cmd == "select":
+                sel_playlist = select()
+            else:
+                route_cmd(cmd, sel_playlist)
+
+
+def greet_main() -> None:
+    """
+    Show informative greeting for user at the main menu.
+    """
+    print("")
+    print("           ____ ____ ____ ____ ____ ____ ____ ____ ")
+    print("          ||P |||L |||A |||Y |||L |||I |||S |||T ||")
+    print("          ||__|||__|||__|||__|||__|||__|||__|||__||")
+    print("          |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
+    print("                ____ ____ ____ ____ ____ ____ ")
+    print("               ||E |||D |||I |||T |||O |||R ||")
+    print("               ||__|||__|||__|||__|||__|||__||")
+    print("               |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
+    print("")
+    print("                 Welcome to Playlist Editor!")
+    print("")
+    print("This program creates, manages, and displays local music playlists.")
+    print("Users must send commands in the local directory that contains the")
+    print("playlists and songs they want to work with.")
+    print("")
+    print("To exit the program from a submenu, press Ctrl+C.")
+    print("")
+
+
+def greet_create() -> None:
+    """
+    Show informative greeting for user at the create menu.
+    """
+    print("* * *                   CREATE PLAYLIST                   * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you create a playlist file.                  *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_select() -> None:
+    """
+    Show informative greeting for user at the select menu.
+    """
+    print("* * *                   SELECT PLAYLIST                   * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you select a playlist to then edit to        *")
+    print("* contain any songs you want in any order that you specify.   *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_add() -> None:
+    """
+    Show informative greeting for user at the add menu.
+    """
+    print("* * *                ADD SONG TO PLAYLIST                 * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you add one or more songs to the selected    *")
+    print("* playlist. To add more than one song, enter multiple         *")
+    print("* numbers separated by commas. Stars indicate that the song   *")
+    print("* is already in the playlist.                                 *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_remove() -> None:
+    """
+    Show informative greeting for user at the remove menu.
+    """
+    print("* * *              REMOVE SONG FROM PLAYLIST              * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you remove one or more songs from the        *")
+    print("* selected playlist. To remove more than one song, enter      *")
+    print("* multiple numbers separated by commas.                       *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_reorder() -> None:
+    """
+    Show informative greeting for user at the reorder menu.
+    """
+    print("* * *                   REORDER SONGS                     * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you reorder songs in the selected playlist.  *")
+    print("* Enter two number separated by a comma to swap the songs     *")
+    print("* next to those numbers. Enter 'done' to go to the main menu. *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_display(sel_playlist: str) -> None:
+    """
+    Show informative greeting for user at the display menu.
+    """
+    print("* * *                   DISPLAY PLAYLIST                  * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This page displays the contents of the selected playlist.   *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+    print(f"{sel_playlist} Playlist:")
+    print("")
+
+
+def greet_shuffle() -> None:
+    """
+    Show informative greeting for user at the shuffle menu.
+    """
+    print("* * *                  SHUFFLE SONGS                      * * *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("* This menu lets you shuffle songs in the selected playlist.  *")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
+    print("")
+
+
+def greet_duplicate() -> None:
+    """
+    Show informative greeting for user at the duplicate menu.
+    """
+    pass
+
+
+def greet_delete() -> None:
+    """
+    Show informative greeting for user at the delete menu.
+    """
+    pass
+
+
+def greet_batch() -> None:
+    """
+    Show informative greeting for user at the batch menu.
+    """
+    pass
+
+
+def greet_sort() -> None:
+    """
+    Show informative greeting for user at the sort menu.
+    """
+    pass
 
 
 if __name__ == '__main__':
