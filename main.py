@@ -52,7 +52,7 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
             case "duplicate":
                 duplicate(sel_playlist)
             case "batch":
-                add_batch(sel_playlist)
+                batch_add(sel_playlist)
             case "sort":
                 sort(sel_playlist)
             case 'exit':
@@ -440,18 +440,88 @@ def delete(sel_playlist: str) -> str or None:
     return
 
 
-def batch(sel_playlist: str) -> None:
+def batch_add(sel_playlist: str) -> None:
     """
     Write to the selected playlist all songs that match a metadata search.
     """
     os.system("clear")
-    greet_batch()
+    greet_batch_add()
 
     songs = get_local_songs()
 
-    print("Metadata types: 'artist', 'album', 'genre', 'year'")
-    metadata_type = input("Choose the type of metadata you want to search: ")
+    with open("music_metadata.txt", "w") as f:
+        f.write("\n".join(songs))
 
+    time.sleep(2)
+
+    print("Metadata types: 'artist', 'album', 'year'")
+    while True:
+        acceptable_inputs = ["artist", "album", "year"]
+        metadata_type = input("Choose the type you want to search: ")
+        if metadata_type not in acceptable_inputs:
+            print("Invalid type.")
+        else:
+            break
+
+    metadata = []
+    with open("music_metadata.txt", "r") as f:
+        list_of_tags = f.read().splitlines()
+        i = 0
+        if metadata_type == "album":
+            i = 1
+        elif metadata_type == "year":
+            i = 3
+        while i < len(list_of_tags):
+            if list_of_tags[i] not in metadata:
+                metadata.append(list_of_tags[i])
+            i += 4
+
+    print(f"\nThese {metadata_type}s are available to add:\n")
+    for i in range(len(metadata)):
+        print(f"({i + 1}) {metadata[i]}")
+    print("")
+
+    while True:
+        acceptable_inputs = range(len(metadata))
+        metadata_idx = input(f"Choose the {metadata_type} you want to add: ")
+        if (int(metadata_idx) - 1) not in acceptable_inputs:
+            print(f"Invalid {metadata_type}.")
+        else:
+            metadata_tag = metadata[int(int(metadata_idx) - 1)]
+            break
+
+    print(f"You chose to add all songs of the {metadata_type} {metadata_tag}.")
+    confirmation = input("Confirm with Y or deny with any other key: ")
+    if confirmation.lower() == "y":
+        print("Adding this batch of songs...")
+    else:
+        print("Batch addition not confirmed. Returning to main menu.")
+        time.sleep(3)
+        return
+
+    songs_to_add = []
+    with open("music_metadata.txt", "r") as f:
+        list_of_tags = f.read().splitlines()
+        i = 0
+        if metadata_type == "album":
+            i = 1
+        elif metadata_type == "year":
+            i = 3
+        j = 0
+        while i < len(list_of_tags):
+            if list_of_tags[i] == metadata_tag:
+                songs_to_add.append(j)
+            i += 4
+            j += 1
+
+    with open(sel_playlist + ".m3u8", "a") as f:
+        for song_to_add in songs_to_add:
+            f.write(PATH + "/" + songs[song_to_add] + "\n")
+
+    print("Batch addition complete! Returning to main menu.")
+    time.sleep(3)
+
+    return
 
 
 def sort(sel_playlist: str) -> None:
@@ -628,7 +698,7 @@ def greet_delete(sel_playlist: str) -> None:
     print("")
 
 
-def greet_batch() -> None:
+def greet_batch_add() -> None:
     """
     Show informative greeting for user at the batch menu.
     """
