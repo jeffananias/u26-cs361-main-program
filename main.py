@@ -198,7 +198,10 @@ def get_pl_songs(sel_playlist: str) -> list:
         song_paths = f.readlines()
         for i in range(len(song_paths)):
             song = re.search(r'[^\/]+$', song_paths[i])
-            pl_songs.append(song.group(0)[:-1])
+            if song.group(0)[-1] == '\n':
+                pl_songs.append(song.group(0)[:-1])
+            else:
+                pl_songs.append(song.group(0))
 
     return pl_songs
 
@@ -403,12 +406,7 @@ def display(sel_playlist: str) -> None:
     print(f"{sel_playlist} Playlist:")
     print("")
 
-    # Print each line in playlist but only contents after last slash
-    with open(sel_playlist + ".m3u8", "r") as f:
-        song_paths = f.readlines()
-        for song_path in song_paths:
-            song = re.search(r'[^\/]+$', song_path)
-            print(song.group(0)[:-1])
+    print_song_list("playlist", sel_playlist)
     print("")
 
     go_back = input("Press ENTER to go back.")
