@@ -103,7 +103,7 @@ def select() -> None:
         print("At least one playlist must exist in this directory.")
         print("Please create a playlist.")
         print("Returning to main menu.")
-        time.sleep(3)
+        time.sleep(2)
         return
 
     # Print enumerated playlist file names
@@ -218,6 +218,7 @@ def add(sel_playlist: str) -> None:
             f.write(PATH + "/" + addition + "\n")
     print("Done!")
     print("")
+    time.sleep(3)
 
 
 def remove(sel_playlist: str) -> None:
@@ -254,6 +255,7 @@ def remove(sel_playlist: str) -> None:
                 f.write(PATH + "/" + local_song + "\n")
     print("Done!")
     print("")
+    time.sleep(3)
 
 
 def validate_choice(choice_str: str, files: list, count: int) -> list:
