@@ -74,6 +74,11 @@ def create() -> None:
         with open(playlist_name + ".m3u8", "w") as f:
             f.write("")
         print("")
+        with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("Creation of playlist.")
+        time.sleep(2)
+        with open("ascii_confirmation_generator.txt", "r") as f:
+            print(f.read())
         print("Playlist created! Returning to main menu.")
         time.sleep(3)
     else:
@@ -382,6 +387,12 @@ def shuffle(sel_playlist: str) -> None:
 
     print_song_list("playlist", sel_playlist)
 
+    with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("Shuffle of playlist.")
+    time.sleep(2)
+    with open("ascii_confirmation_generator.txt", "r") as f:
+        print(f.read())
+
     print("Shuffle complete! Returning to main menu.")
 
     with open("list_randomizer.txt", "w") as f:
@@ -518,6 +529,12 @@ def batch_add(sel_playlist: str) -> None:
     with open(sel_playlist + ".m3u8", "a") as f:
         for song_to_add in songs_to_add:
             f.write(PATH + "/" + songs[song_to_add] + "\n")
+
+    with open("ascii_confirmation_generator.txt", "w") as f:
+            f.write("Batch addition to playlist.")
+    time.sleep(2)
+    with open("ascii_confirmation_generator.txt", "r") as f:
+        print(f.read())
 
     print("Batch addition complete! Returning to main menu.")
     time.sleep(3)
