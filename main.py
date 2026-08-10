@@ -11,7 +11,7 @@ import os
 import re
 import time
 import shutil
-import datetime
+from datetime import datetime
 
 
 PATH = os.getcwd()
@@ -23,7 +23,7 @@ def prompt() -> str:
     """
     print("Commands:")
     print("create | select | add | remove | reorder | display")
-    print("shuffle | duplicate | delete | batch | sort | exit")
+    print("shuffle | duplicate | delete | batch | stale | exit")
     return input("Type a command and press ENTER: ")
 
 
@@ -31,7 +31,8 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
     """
     Route user input command to intended function with selected playlist.
     """
-    if cmd != "create" and sel_playlist == None:
+    excluded_from_check = ["create", "stale", "exit"]
+    if cmd not in excluded_from_check and sel_playlist == None:
         print("")
         print("Remember to first select a playlist. Reloading main menu...\n")
         time.sleep(3)
@@ -53,8 +54,8 @@ def route_cmd(cmd: str, sel_playlist: str) -> None:
                 duplicate(sel_playlist)
             case "batch":
                 batch_add(sel_playlist)
-            case "sort":
-                sort(sel_playlist)
+            case "stale":
+                find_stale_playlists()
             case 'exit':
                 exit()
             case _:
@@ -524,12 +525,33 @@ def batch_add(sel_playlist: str) -> None:
     return
 
 
-def sort(sel_playlist: str) -> None:
+def find_stale_playlists() -> None:
     """
-    Write to the selected playlist all songs sorted by a metadata tag.
+    Print stale playlists that have not been updated in more than 7 days.
     """
     os.system("clear")
-    greet_sort()
+    greet_find_stale_playlists()
+
+    # Create list of sorted .m3u8 files in current path
+    files = sorted(os.listdir(PATH))
+    playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
+
+    for playlist in playlists:
+        last_mod_timestamp = os.path.getmtime(PATH + "/" + playlist + ".m3u8")
+        last_mod_datetime = datetime.fromtimestamp(last_mod_timestamp)
+        last_modified = last_mod_datetime.strftime("%Y-%m-%d")
+        with open("date_diff.txt", "w") as f:
+            f.write(last_modified)
+        time.sleep(2)
+        with open("date_diff.txt", "r") as f:
+            response = f.read().split()
+            status = response[0]
+            days = int(response[1])
+            if status == "OVERDUE:" and days > 7:
+                print(playlist) 
+
+    print("")
+    go_back = input("Press ENTER to go back.")
 
 
 def main() -> None:
@@ -712,16 +734,14 @@ def greet_batch_add() -> None:
     print("")
 
 
-def greet_sort() -> None:
+def greet_find_stale_playlists() -> None:
     """
     Show informative greeting for user at the sort menu.
     """
-    print("* * *               SORT SONGS IN PLAYLIST                * * *")
+    print("* * *                FIND STALE PLAYLISTS                 * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you sort the songs in the selected playlist. *")
-    print("* Choose the metadata tag, type your desired tag contents,    *")
-    print("* and choose ascending or descending to automatically sort    *")
-    print("* the songs per your specifications.                          *")
+    print("* This menu lets you find stale playlists that have not been  *")
+    print("* modified in more than 7 days. The process is automatic.     *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("")
 
