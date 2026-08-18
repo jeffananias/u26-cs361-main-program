@@ -29,8 +29,9 @@ CMDS = [
 ]
 CMDS_NOT_CHECKED = ["create", "select", "delete", "stale", "exit"]
 CONFIRM_PROMPT = "Enter Y to confirm or deny with any other key: "
+ERROR_INVALID_SYNTAX = "Invalid syntax. Try again."
 ERROR_NO_PL_SONGS = "Playlist must contain songs before you can do this."
-ERROR_NO_PLS = "At least one playlist must exist in this directory for you to"
+ERROR_NO_PLS = "Directory must contain playlists before you can do this."
 PATH = os.getcwd()
 RETURNING = "Returning to main menu."
 
@@ -65,7 +66,7 @@ def route_cmd(cmd: str, sel_pl: str) -> None:
     if cmd not in CMDS:
         print("\nInvalid command. Reloading main menu...")
         time.sleep(3)
-        return ""
+        return sel_pl
     else:
         if cmd not in CMDS_NOT_CHECKED and sel_pl == "":
             print("\nYou must select a playlist. Reloading main menu...")
@@ -76,7 +77,7 @@ def route_cmd(cmd: str, sel_pl: str) -> None:
                 case "create":
                     return create_pl(sel_pl)
                 case "select":
-                    return select_pl()
+                    return select_pl(sel_pl)
                 case "add":
                     return add_songs(sel_pl)
                 case "batch":
@@ -107,7 +108,11 @@ def create_pl(sel_pl: str) -> None:
     os.system("clear")
     greetings.create_pl()
 
-    pl_name = input("What will be your playlist name? ")
+    pl_name = ""
+    while pl_name == "":
+        pl_name = input("\nWhat will be your playlist name? ")
+        if pl_name == "":
+            print("Cannot use empty string as name.")
     print(f"You named your playlist '{pl_name}'.")
 
     # Create playlist file and print ASCII art if yes; return if no
@@ -134,13 +139,13 @@ def create_pl(sel_pl: str) -> None:
 # Select playlist function and sub-calls
 # -----------------------------------------------------------------------------
 
-def select_pl() -> str:
+def select_pl(sel_pl: str) -> str:
     """Show menu for selection of playlist."""
     os.system("clear")
     greetings.select_pl()
 
     if contains_pls() is False:
-        print(ERROR_NO_PLS + "\nselect a playlist. " + RETURNING)
+        print(ERROR_NO_PLS + "\n" + RETURNING)
         time.sleep(3)
         return ""
 
@@ -148,14 +153,21 @@ def select_pl() -> str:
     pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
     for i in range(len(pls)):
         print(f"({i + 1}) {pls[i]}")
-    print()
 
-    sel_pl = validate_selection(pls, len(pls))
-    while sel_pl == "":
-        sel_pl = validate_selection(pls, len(pls))
-    print("Playlist selected!\n" + RETURNING)
-    time.sleep(3)
-    return sel_pl
+    # Validate and confirm user input for selection
+    choice_list = []
+    while len(choice_list) == 0:
+        choice_str = input("\nEnter number to select playlist: ")
+        choice_list = validate_choice("add", choice_str, len(pls))
+    selection = confirm_choice(choice_list, pls)
+    if len(selection) != 0:
+        print("\nPlaylist selected!\n" + RETURNING)
+        time.sleep(3)
+        return selection[0]
+    else:
+        print("\nPlaylist not selected.\n" + RETURNING)
+        time.sleep(3)
+        return sel_pl
 
 
 def contains_pls() -> bool:
@@ -170,23 +182,57 @@ def contains_pls() -> bool:
     return False
 
 
-def validate_selection(pls: list, count: int) -> str:
-    """Validate user input for playlist selection or deletion."""
-    # Ensure input is number within range of options
-    choice = input("Enter number to select: ")
-    if choice.isnumeric() is False or int(choice) < 1 or int(choice) > count:
-        print("Invalid selection. Only select from available numbers.")
-        return ""
+def validate_choice(menu: str, choice_str: str, count: int) -> list:
+    """Validate user input for choice(s) made in menus.
+    
+    Parameters:
+    choice_str -- string to be parsed for proper format
+    count      -- maximum number that choice cannot exceed
+    """
+    # Ensure string input contains either one integer, 'done', or
+    # series of comma-delimited integers
+    if menu == "select" and choice_str.isnumeric() is False:
+        print(ERROR_INVALID_SYNTAX)
+        return []
+    if menu == "reorder" and choice_str == "done":
+        return []
+    pattern = re.compile(r"^\s*\d+\s*(?:,\s*\d+\s*)*$")
+    if pattern.match(choice_str) is None:
+        print(ERROR_INVALID_SYNTAX)
+        return []
 
-    choice = int(choice)
-    print(f"\nYou chose {pls[choice - 1]}.")
+    # Ensure list of input integers is within range of options
+    choice_list = [int(choice) for choice in choice_str.split(",")]
+    if menu == "reorder" and len(choice_list) != 2:
+        print(ERROR_INVALID_SYNTAX)
+        return []
+    for choice_item in choice_list:
+        if choice_item < 1 or choice_item > count:
+            print("Invalid choice. Only use available numbers.")
+            return []
+
+    return choice_list
+
+
+def confirm_choice(choice_list: list, music_items: list) -> list:
+    """Confirm user input for choice(s) made in menus.
+
+    Parameters:
+    choice_list -- list of integer(s) input by user for choice(s)
+    music_items -- list of either songs or playlists
+    """
+    print("Your choice:")
+    for choice_item in choice_list:
+        print(f"{music_items[choice_item - 1]}")
     confirmation = input(CONFIRM_PROMPT)
     if confirmation.lower() == "y":
-        return pls[choice - 1]
+        confirmed_choices = []
+        for choice_item in choice_list:
+            confirmed_choices.append(music_items[choice_item - 1])
+        return confirmed_choices
     else:
         print("Choice not confirmed.")
-        return ""
-
+        return []
 
 # -----------------------------------------------------------------------------
 # Add songs function and sub-calls
@@ -201,20 +247,23 @@ def add_songs(sel_pl: str) -> None:
     print_local_songs(sel_pl, local_songs)
 
     # Validate and confirm user input and store additions
-    additions = []
-    while len(additions) == 0:
-        choice_str = input("Enter number(s) to choose song(s): ")
-        choice_list = validate_choice(choice_str, len(local_songs))
-        if choice_list is not None:
-            additions = confirm_choice(choice_list, local_songs)
-
-    # Write additions to selected playlist
-    print("Adding song(s) to playlist...")
-    with open(sel_pl + ".m3u8", "a") as f:
-        f.writelines(PATH + "/" + addition + "\n" for addition in additions)
-    print("Done!\n")
-    time.sleep(3)
-    return sel_pl
+    choice_list = []
+    while len(choice_list) == 0:
+        choice_str = input("\nEnter number(s) to choose song(s): ")
+        choice_list = validate_choice("add", choice_str, len(local_songs))
+    additions = confirm_choice(choice_list, local_songs)
+    if len(additions) != 0:
+        # Write additions to selected playlist
+        print("Adding song(s) to playlist...")
+        with open(sel_pl + ".m3u8", "a") as f:
+            f.writelines(PATH + "/" + addition + "\n" for addition in additions)
+        print("Done!")
+        time.sleep(3)
+        return sel_pl
+    else:
+        print("\nSongs not added.\n" + RETURNING)
+        time.sleep(3)
+        return sel_pl
 
 
 def get_local_songs() -> list:
@@ -233,52 +282,6 @@ def print_local_songs(sel_pl: str, songs: list) -> None:
                 print(f"({i + 1}) * {songs[i]}")
             else:
                 print(f"({i + 1}) {songs[i]}")
-    print()
-
-
-def validate_choice(choice_str: str, count: int) -> list:
-    """Validate user input for choice(s) made in menu.
-    
-    Parameters:
-    choice_str -- string to be parsed for proper format
-    count -- maximum number that choice cannot exceed
-    """
-    # Ensure string input is series of comma-delimited integers
-    pattern = re.compile(r"^\s*\d+\s*(?:,\s*\d+\s*)*$")
-    if pattern.match(choice_str) is None:
-        print("Invalid syntax. Try again.")
-        return
-
-    # Ensure list of input integers is within range of options
-    choice_list = [int(choice) for choice in choice_str.split(",")]
-    for choice_item in choice_list:
-        if choice_item < 1 or choice_item > count:
-            print("Invalid choice(s). Only use available numbers.")
-            return
-
-    return choice_list
-
-
-def confirm_choice(choice_list: list, music_items: list) -> list:
-    """Confirm user input for choice(s) made in menu.
-
-    Parameters:
-    choice_list -- list of integer(s) input by user for choice(s)
-    music_items -- list of either songs or playlists
-    """
-    print("\nYou chose the following:")
-    for choice_item in choice_list:
-        print(f"{music_items[choice_item - 1]}")
-    confirmation = input(CONFIRM_PROMPT)
-    if confirmation.lower() == "y":
-        print()
-        confirmed_choices = []
-        for choice_item in choice_list:
-            confirmed_choices.append(music_items[choice_item - 1])
-        return confirmed_choices
-    else:
-        print("Choice(s) not confirmed.")
-        return []
 
 # -----------------------------------------------------------------------------
 # Batch add songs function and sub-calls
@@ -319,14 +322,14 @@ def batch_add_songs(sel_pl: str) -> None:
     if confirmation.lower() == "y":
         print("Adding this batch of songs...")
     else:
-        print("Batch addition not confirmed.\n" + RETURNING)
+        print("Songs in batch not added.\n" + RETURNING)
         time.sleep(3)
         return sel_pl
 
-    songs_to_add = get_songs_to_add(acceptable_types, md_type, md_choice)
+    batch_additions = get_batch_additions(acceptable_types, md_type, md_choice)
     with open(sel_pl + ".m3u8", "a") as f:
-        f.writelines(PATH + "/" + songs[song_to_add] + "\n" 
-                     for song_to_add in songs_to_add)
+        f.writelines(PATH + "/" + songs[batch_addition] + "\n" 
+                     for batch_addition in batch_additions)
 
     with open("ascii_confirmation_generator.txt", "w") as f:
         f.write("Batch addition to playlist.")
@@ -358,20 +361,20 @@ def get_md_list(acceptable_types: list, md_type: str) -> list:
     return md_list
 
 
-def get_songs_to_add(acceptable_types: list, 
+def get_batch_additions(acceptable_types: list, 
                      md_type: str, md_choice: str) -> list:
     """a"""
-    songs_to_add = []
+    batch_additions = []
     with open("music_metadata.txt", "r") as f:
         list_of_tags = f.read().splitlines()
         i = acceptable_types.index(md_type)
         j = 0
         while i < len(list_of_tags):
             if list_of_tags[i] == md_choice:
-                songs_to_add.append(j)
+                batch_additions.append(j)
             i += 3
             j += 1
-    return songs_to_add
+    return batch_additions
 
 # -----------------------------------------------------------------------------
 # Remove songs function and sub-calls
@@ -390,22 +393,25 @@ def remove_songs(sel_pl: str) -> None:
         return sel_pl
 
     # Validate and confirm user input and store removals
-    removals = []
-    while len(removals) == 0:
-        choice_str = input("Enter number(s) to choose song(s): ")
-        choice_list = validate_choice(choice_str, len(pl_songs))
-        if choice_list is not None:
-            removals = confirm_choice(choice_list, pl_songs)
-
-    # Write additions to selected playlist
-    print("Removing song(s) from playlist...")
-    with open(sel_pl + ".m3u8", "w") as f:
-        for pl_song in pl_songs:
-            if pl_song not in removals:
-                f.write(PATH + "/" + pl_song + "\n")
-    print("Done!\n")
-    time.sleep(3)
-    return sel_pl
+    choice_list = []
+    while len(choice_list) == 0:
+        choice_str = input("\nEnter number(s) to choose song(s): ")
+        choice_list = validate_choice("remove", choice_str, len(pl_songs))
+    removals = confirm_choice(choice_list, pl_songs)
+    if len(removals) != 0:
+        # Write removals to selected playlist
+        print("Removing song(s) from playlist...")
+        with open(sel_pl + ".m3u8", "w") as f:
+            for pl_song in pl_songs:
+                if pl_song not in removals:
+                    f.write(PATH + "/" + pl_song + "\n")
+        print("Done!")
+        time.sleep(3)
+        return sel_pl
+    else:
+        print("\nSongs not removed.\n" + RETURNING)
+        time.sleep(3)
+        return sel_pl
 
 
 def print_pl_songs(sel_pl: str) -> None:
@@ -413,7 +419,6 @@ def print_pl_songs(sel_pl: str) -> None:
     pl_songs = get_pl_songs(sel_pl)
     for i in range(len(pl_songs)):
         print(f"({i + 1}) {pl_songs[i]}")
-    print()
 
 
 def get_pl_songs(sel_pl: str) -> list:
@@ -435,26 +440,30 @@ def reorder_songs(sel_pl: str) -> None:
     os.system("clear")
     greetings.reorder_songs()
 
+    print()
     pl_songs = get_pl_songs(sel_pl)
     if len(pl_songs) == 0:
         print(ERROR_NO_PL_SONGS + "\n" + RETURNING)
         time.sleep(3)
         return sel_pl
 
-    while True:
+    choice_str = ""
+    while choice_str != "done":
+        print()
         print_pl_songs(sel_pl)
-        choice_str = input("Enter the numbers of two songs to swap: ")
-        if choice_str == "done":
-            break
-        choice_list = validate_choice(choice_str, len(pl_songs))
-        if len(choice_list) != 2:
-            print("You must select two songs to swap. Try again.\n")
-        else:
-            [first_song, second_song] = confirm_choice(choice_list, pl_songs)
-            pl_songs[choice_list[0] - 1] = second_song
-            pl_songs[choice_list[1] - 1] = first_song
-            with open(sel_pl + ".m3u8", "w") as f:
-                f.writelines(PATH + "/" + pl_song + "\n" for pl_song in pl_songs)
+        choice_str = input("\nEnter the numbers of two songs to swap: ")
+        choice_list = validate_choice("reorder", choice_str, len(pl_songs))
+        if len(choice_list) != 0:
+            reorder_couple = confirm_choice(choice_list, pl_songs)
+            if len(reorder_couple) == 2:
+                pl_songs[choice_list[0] - 1] = reorder_couple[1] # Second to first
+                pl_songs[choice_list[1] - 1] = reorder_couple[0] # First to second
+                with open(sel_pl + ".m3u8", "w") as f:
+                    f.writelines(PATH
+                                 + "/" 
+                                 + pl_song 
+                                 + "\n" for pl_song in pl_songs)
+                print(f"{reorder_couple[0]} swapped with {reorder_couple[1]}")
 
     print("\nReorder complete!\n" + RETURNING)
     time.sleep(3)
@@ -470,7 +479,7 @@ def display_pl(sel_pl: str) -> None:
     greetings.display_pl(sel_pl)
 
     print_pl_songs(sel_pl)
-    input("Press ENTER to go back.")
+    input("\nPress ENTER to go back.")
     return sel_pl
 
 # -----------------------------------------------------------------------------
@@ -561,31 +570,33 @@ def delete_pl(sel_pl) -> str:
     greetings.delete_pl()
 
     if contains_pls() is False:
-        print(ERROR_NO_PLS + "\ndelete a playlist. " + RETURNING)
+        print(ERROR_NO_PLS + "\n" + RETURNING)
         time.sleep(3)
         return ""
 
     pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
     for i in range(len(pls)):
         print(f"({i + 1}) {pls[i]}")
-    print()
 
-    # Validate and confirm user input and store removals
-    pls_to_del = []
-    while len(pls_to_del) == 0:
-        choice_str = input("Enter number(s) to delete playlist(s): ")
-        choice_list = validate_choice(choice_str, len(pls))
-        if choice_list is not None:
-            pls_to_del = confirm_choice(choice_list, pls)
-
-    print("Starting deletion...")
-    for pl_to_del in pls_to_del:
-        os.remove(PATH + "/" + pl_to_del + ".m3u8")
-    print("Deletion complete!\n" + RETURNING)
-    time.sleep(3)
-    if sel_pl in pls_to_del:
-        return ""
+    # Validate and confirm user input and delete playlist(s)
+    choice_list = []
+    while len(choice_list) == 0:
+        choice_str = input("\nEnter number(s) to delete playlist(s): ")
+        choice_list = validate_choice("delete", choice_str, len(pls))
+    pls_to_del = confirm_choice(choice_list, pls)
+    if len(pls_to_del) != 0:
+        print("Starting deletion...")
+        for pl_to_del in pls_to_del:
+            os.remove(PATH + "/" + pl_to_del + ".m3u8")
+        print("Deletion complete!\n" + RETURNING)
+        time.sleep(3)
+        if sel_pl in pls_to_del:
+            return ""
+        else:
+            return sel_pl
     else:
+        print("\nPlaylist(s) not deleted.\n" + RETURNING)
+        time.sleep(3)
         return sel_pl
 
 # -----------------------------------------------------------------------------
@@ -598,7 +609,7 @@ def find_stale_pls(sel_pl: str) -> None:
     greetings.find_stale_pls()
 
     if contains_pls() is False:
-        print(ERROR_NO_PLS + "\nfind stale playlists. " + RETURNING)
+        print(ERROR_NO_PLS + "\n" + RETURNING)
         time.sleep(3)
         return ""
 
