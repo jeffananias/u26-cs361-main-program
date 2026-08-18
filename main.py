@@ -1,414 +1,518 @@
 # Name: Jeff Ananias
 # Course: CS 361
-# Due Date: 2026-08-10
-# Description: This file provides a command-line interface for a user to
-#              create, manage, and display local music playlists.
+# Description: This file provides a command-line interface for a user
+#              to create, manage, and display local music playlists.
 #
-#              Playlists are .m3u8 files and store songs of .mp3, .wav,
-#              .flac, .aac, and .ogg format.
+#              Playlists must be .m3u8 files and store songs of .mp3,
+#              .wav, .flac, .aac, and .ogg format.
+
+# -----------------------------------------------------------------------------
+# Imports
+# -----------------------------------------------------------------------------
 
 import os
 import re
-import time
 import shutil
+import sys
+import time
 from datetime import datetime
 
+import greetings
 
+# -----------------------------------------------------------------------------
+# Global constants
+# -----------------------------------------------------------------------------
+
+CMDS = [
+    "create", "select", "add", "batch", "remove", "reorder",
+    "shuffle", "display", "duplicate", "delete", "stale", "exit"
+]
+CMDS_NOT_CHECKED = ["create", "select", "delete", "stale", "exit"]
+CONFIRM_PROMPT = "Enter Y to confirm or deny with any other key: "
+ERROR_NO_PL_SONGS = "Playlist must contain songs before you can do this."
 PATH = os.getcwd()
+RETURNING = "Returning to main menu."
+
+# -----------------------------------------------------------------------------
+# Main function and sub-calls
+# -----------------------------------------------------------------------------
+
+def main() -> None:
+    """Provide command-line interface to user."""
+    # Initialize selected playlist and wait for command
+    sel_pl = ""
+    while True:
+        os.system("clear")
+        greetings.main()
+        if sel_pl == "":
+            print("First, select a playlist.\n")
+        else:
+            print(f"Your selected playlist is {sel_pl}.\n")
+        cmd = prompt()
+        sel_pl = route_cmd(cmd, sel_pl)
 
 
 def prompt() -> str:
-    """
-    Prompt user with instructions.
-    """
-    print("Commands:")
-    print("create | select | add | remove | reorder | display")
-    print("shuffle | duplicate | delete | batch | stale | exit")
+    """Prompt user with instructions."""
+    print("Commands:\ncreate | select | add | batch | remove | reorder")
+    print("shuffle | display | duplicate | delete | stale | exit")
     return input("Type a command and press ENTER: ")
 
 
-def route_cmd(cmd: str, sel_playlist: str) -> None:
-    """
-    Route user input command to intended function with selected playlist.
-    """
-    excluded_from_check = ["create", "select", "delete", "stale", "exit"]
-    if cmd not in excluded_from_check and sel_playlist == None:
-        print("")
-        print("Remember to first select a playlist. Reloading main menu...\n")
+def route_cmd(cmd: str, sel_pl: str) -> None:
+    """Route command to intended function with selected playlist."""
+    if cmd not in CMDS:
+        print("\nInvalid command. Reloading main menu...")
         time.sleep(3)
+        return ""
     else:
-        match cmd:
-            case "create":
-                return create(sel_playlist)
-            case "select":
-                return select()
-            case "add":
-                return add(sel_playlist)
-            case "remove":
-                return remove(sel_playlist)
-            case "reorder":
-                return reorder(sel_playlist)
-            case "display":
-                return display(sel_playlist)
-            case "shuffle":
-                return shuffle(sel_playlist)
-            case "duplicate":
-                return duplicate(sel_playlist)
-            case "delete":
-                return delete(sel_playlist)
-            case "batch":
-                return batch_add(sel_playlist)
-            case "stale":
-                return find_stale_playlists(sel_playlist)
-            case 'exit':
-                exit()
-            case _:
-                print("Invalid command.")
+        if cmd not in CMDS_NOT_CHECKED and sel_pl == "":
+            print("\nYou must select a playlist. Reloading main menu...")
+            time.sleep(3)
+            return sel_pl
+        else:
+            match cmd:
+                case "create":
+                    return create_pl(sel_pl)
+                case "select":
+                    return select_pl()
+                case "add":
+                    return add_songs(sel_pl)
+                case "batch":
+                    return batch_add_songs(sel_pl)
+                case "remove":
+                    return remove_songs(sel_pl)
+                case "reorder":
+                    return reorder_songs(sel_pl)
+                case "shuffle":
+                    return shuffle_songs(sel_pl)
+                case "display":
+                    return display_pl(sel_pl)
+                case "duplicate":
+                    return duplicate_pl(sel_pl)
+                case "delete":
+                    return delete_pl(sel_pl)
+                case "stale":
+                    return find_stale_pls(sel_pl)
+                case "exit":
+                    sys.exit()
 
+# -----------------------------------------------------------------------------
+# Create playlist function
+# -----------------------------------------------------------------------------
 
-def create(sel_playlist: str) -> None:
+def create_pl(sel_pl: str) -> None:
+    """Show menu for creation of playlist."""
     os.system("clear")
+    greetings.create_pl()
 
-    greet_create()
+    pl_name = input("What will be your playlist name? ")
+    print(f"You named your playlist '{pl_name}'.")
 
-    playlist_name = input("What will be your playlist name? ")
-    print(f"You named your playlist '{playlist_name}'.")
-    confirmation = input("Confirm with Y or deny with any other key: ")
+    # Create playlist file and print ASCII art if yes; return if no
+    confirmation = input(CONFIRM_PROMPT)
     if confirmation.lower() == "y":
-        with open(playlist_name + ".m3u8", "w") as f:
-            f.write("")
-        print("")
+        with open(pl_name + ".m3u8", "w") as f:
+            f.write("")  # Create playlist file
         with open("ascii_confirmation_generator.txt", "w") as f:
             f.write("Creation of playlist.")
-        time.sleep(2)
+        time.sleep(1)    # Allow time for microservice response
         with open("ascii_confirmation_generator.txt", "r") as f:
             print(f.read())
-        print("Playlist created! Returning to main menu.")
-
-        # Clean microservice text file
+        print("Playlist created!\n" + RETURNING)
         with open("ascii_confirmation_generator.txt", "w") as f:
-            f.write("")
-
+            f.write("")  # Clean microservice text file
         time.sleep(3)
-        return sel_playlist
+        return sel_pl
     else:
-        print("Playlist not created. Returning to main menu.")
+        print("Playlist not created.\n" + RETURNING)
         time.sleep(3)
-        return sel_playlist
+        return sel_pl
 
+# -----------------------------------------------------------------------------
+# Select playlist function and sub-calls
+# -----------------------------------------------------------------------------
 
-def select() -> str or None:
-    """
-    Show menu to user for selection of playlist.
-    """
+def select_pl() -> str:
+    """Show menu for selection of playlist."""
     os.system("clear")
+    greetings.select_pl()
 
-    greet_select()
-
-    # Create list of sorted .m3u8 files in current path
-    files = sorted(os.listdir(PATH))
-    playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
-
-    playlist_count = len(playlists)
-    if playlist_count == 0:
-        print("At least one playlist must exist in this directory.")
-        print("Please create a playlist.")
-        print("Returning to main menu.")
+    if contains_pls() is False:
+        print("At least one playlist must exist in this directory for")
+        print("you to select a playlist.\n" + RETURNING)
         time.sleep(3)
-        return
+        return ""
 
-    # Print enumerated playlist file names
-    for i in range(playlist_count):
-        print(f"({i + 1}) {playlists[i]}")
-    print("")
-    print("Any commands issued for this playlist will permanently overwrite")
-    print("its contents. Some commands permit an undo feature, but not all.")
-    print("")
+    # Create sorted list of .m3u8 files and display them
+    pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
+    for i in range(len(pls)):
+        print(f"({i + 1}) {pls[i]}")
+    print()
 
-    # Validate user input and return selection
-    sel_playlist = validate_selection(playlists, playlist_count)
-    while sel_playlist is None:
-        sel_playlist = validate_selection(playlists, playlist_count)
-    return sel_playlist
+    sel_pl = validate_selection(pls, len(pls))
+    while sel_pl == "":
+        sel_pl = validate_selection(pls, len(pls))
+    print("Playlist selected!\n" + RETURNING)
+    time.sleep(3)
+    return sel_pl
 
 
-def validate_selection(files: list, count: int) -> str:
+def contains_pls() -> bool:
     """
-    Validate user input for playlist selection or deletion.
+    Return True if any playlists in current directory;
+    return False if not.
     """
+    pls = os.listdir(PATH)
+    for pl in pls:
+        if pl.endswith(".m3u8"):
+            return True
+    return False
+
+
+def validate_selection(pls: list, count: int) -> str:
+    """Validate user input for playlist selection or deletion."""
     # Ensure input is number within range of options
     choice = input("Enter number to select: ")
     if choice.isnumeric() is False or int(choice) < 1 or int(choice) > count:
-        print("Invalid choice.")
-        return
-    choice = int(choice)
+        print("Invalid selection. Only select from available numbers.")
+        return ""
 
-    print("")
-    print(f"You chose {files[choice - 1]}.")
-    confirmation = input("Confirm with Y or deny with any other key: ")
+    choice = int(choice)
+    print(f"\nYou chose {pls[choice - 1]}.")
+    confirmation = input(CONFIRM_PROMPT)
     if confirmation.lower() == "y":
-        print("")
-        return files[choice - 1]
+        return pls[choice - 1]
     else:
         print("Choice not confirmed.")
+        return ""
+
+
+# -----------------------------------------------------------------------------
+# Add songs function and sub-calls
+# -----------------------------------------------------------------------------
+
+def add_songs(sel_pl: str) -> None:
+    """Show menu for addition of song(s) to selected playlist."""
+    os.system("clear")
+    greetings.add_songs()
+
+    local_songs = get_local_songs()
+    print_local_songs(sel_pl, local_songs)
+
+    # Validate and confirm user input and store additions
+    additions = []
+    while len(additions) == 0:
+        choice_str = input("Enter number(s) to choose song(s): ")
+        choice_list = validate_choice(choice_str, len(local_songs))
+        if choice_list is not None:
+            additions = confirm_choice(choice_list, local_songs)
+
+    # Write additions to selected playlist
+    print("Adding song(s) to playlist...")
+    with open(sel_pl + ".m3u8", "a") as f:
+        f.writelines(PATH + "/" + addition + "\n" for addition in additions)
+    print("Done!\n")
+    time.sleep(3)
+    return sel_pl
 
 
 def get_local_songs() -> list:
-    """
-    Create list of sorted music files in current path.
-    """
-    files = sorted(os.listdir(PATH))
-    music_exts = ('.mp3', '.wav', '.flac', '.aac', '.ogg')
-    local_songs = [f for f in files if f.endswith(music_exts)]
-    return local_songs
+    """Create list of sorted songs in current path."""
+    music_exts = (".mp3", ".wav", ".flac", ".aac", ".ogg")
+    return [f for f in sorted(os.listdir(PATH)) if f.endswith(music_exts)]
 
 
-def get_pl_songs(sel_playlist: str) -> list:
-    """
-    Create list of songs in the selected playlist.
-    """
-    pl_songs = []
-
-    with open(sel_playlist + ".m3u8", "r") as f:
-        song_paths = f.read().splitlines()
-        for i in range(len(song_paths)):
-            song = re.search(r'[^\/]+$', song_paths[i])
-            pl_songs.append(song.group(0))
-
-    return pl_songs
+def print_local_songs(sel_pl: str, songs: list) -> None:
+    """Print song names from current directory."""
+    with open(sel_pl + ".m3u8", "r") as f:
+        playlist_contents = f.read()
+        for i in range(len(songs)):
+            # If song already in selected playlist, prepend asterisk
+            if songs[i] in playlist_contents:
+                print(f"({i + 1}) * {songs[i]}")
+            else:
+                print(f"({i + 1}) {songs[i]}")
+    print()
 
 
-def print_song_list(menu: str, sel_playlist: str, songs: list = []) -> None:
-    """
-    Print enumerated music file names either from the local directory or the
-    selected playlist.
-    """
-    match menu:
-        case "local":
-            with open(sel_playlist + ".m3u8", "r") as f:
-                playlist_contents = f.read()
-                for i in range(len(songs)):
-                    # If song already in selected playlist, prepend asterisk
-                    if songs[i] in playlist_contents:
-                        print(f"({i + 1}) * {songs[i]}")
-                    else:
-                        print(f"({i + 1}) {songs[i]}")
-            print("")
-        case "playlist":
-            pl_songs = get_pl_songs(sel_playlist)
-            for i in range(len(pl_songs)):
-                print(f"({i + 1}) {pl_songs[i]}")
-            print("")
-
-
-def add(sel_playlist: str) -> None:
-    """
-    Show menu to user for addition of one or more songs to selected playlist.
-    """
-    os.system("clear")
-
-    greet_add()
-
-    songs = get_local_songs()
-    print_song_list("local", sel_playlist, songs)
-
-    # Validate and confirm user input and store additions
-    choice_list = None
-    additions = None
-    while choice_list is None:
-        choice_str = input("Enter number(s) to choose song(s): ")
-        choice_list = validate_choice(choice_str, songs, len(songs))
-        if choice_list is not None:
-            additions = confirm_choice(choice_list, songs)
-    add_count = len(additions)
+def validate_choice(choice_str: str, count: int) -> list:
+    """Validate user input for choice(s) made in menu.
     
-    # Write additions to selected playlist
-    print("Adding song(s) to playlist...")
-    with open(sel_playlist + ".m3u8", "a") as f:
-        for addition in additions:
-            f.write(PATH + "/" + addition + "\n")
-    print("Done!")
-    print("")
-    time.sleep(3)
-    return sel_playlist
-
-
-def remove(sel_playlist: str) -> None:
-    """
-    Show menu to user for removal of one or more songs to selected playlist.
-    """
-    os.system("clear")
-
-    greet_remove()
-
-    print_song_list("playlist", sel_playlist)
-    pl_songs = get_pl_songs(sel_playlist)
-    if len(pl_songs) == 0:
-        print("This playlist must contain songs before you can remove any.\n")
-        time.sleep(3)
-        return sel_playlist
-
-    # Validate and confirm user input and store removals
-    choice_list = None
-    removals = None
-    while choice_list is None:
-        choice_str = input("Enter number(s) to choose song(s): ")
-        choice_list = validate_choice(choice_str, pl_songs, len(pl_songs))
-        if choice_list is not None:
-            removals = confirm_choice(choice_list, pl_songs)
-    remove_count = len(removals)
-    
-    # Write additions to selected playlist
-    print("Removing song(s) from playlist...")
-    with open(sel_playlist + ".m3u8", "w") as f:
-        for pl_song in pl_songs:
-            if pl_song not in removals:
-                f.write(PATH + "/" + pl_song + "\n")
-    print("Done!")
-    print("")
-    time.sleep(3)
-    return sel_playlist
-
-
-def validate_choice(choice_str: str, files: list, count: int) -> list:
-    """
-    Validate user input for choice of one or more songs.
+    Parameters:
+    choice_str -- string to be parsed for proper format
+    count -- maximum number that choice cannot exceed
     """
     # Ensure string input is series of comma-delimited integers
-    pattern = re.compile(r'^\s*\d+\s*(?:,\s*\d+\s*)*$')
+    pattern = re.compile(r"^\s*\d+\s*(?:,\s*\d+\s*)*$")
     if pattern.match(choice_str) is None:
-        print("Invalid syntax.")
-        return False
+        print("Invalid syntax. Try again.")
+        return
 
     # Ensure list of input integers is within range of options
     choice_list = [int(choice) for choice in choice_str.split(",")]
     for choice_item in choice_list:
         if choice_item < 1 or choice_item > count:
             print("Invalid choice(s). Only use available numbers.")
-            return False
+            return
 
     return choice_list
 
 
-def confirm_choice(choice_list: list, files: list) -> list:
+def confirm_choice(choice_list: list, music_items: list) -> list:
+    """Confirm user input for choice(s) made in menu.
+
+    Parameters:
+    choice_list -- list of integer(s) input by user for choice(s)
+    music_items -- list of either songs or playlists
     """
-    Confirm user input for choice or one or more songs.
-    """
-    print("")
-    print("You chose the following song(s):")
+    print("\nYou chose the following:")
     for choice_item in choice_list:
-        print(f"{files[choice_item - 1]}")
-    confirmation = input("Confirm with Y or deny with any other key: ")
+        print(f"{music_items[choice_item - 1]}")
+    confirmation = input(CONFIRM_PROMPT)
     if confirmation.lower() == "y":
-        print("")
+        print()
         confirmed_choices = []
         for choice_item in choice_list:
-            confirmed_choices.append(files[choice_item - 1])
+            confirmed_choices.append(music_items[choice_item - 1])
         return confirmed_choices
     else:
-        print("Choice not confirmed.")
+        print("Choice(s) not confirmed.")
+        return []
 
+# -----------------------------------------------------------------------------
+# Batch add songs function and sub-calls
+# -----------------------------------------------------------------------------
 
-def reorder(sel_playlist: str) -> None:
-    """
-    Swap items in the playlist to reorder them.
-    """
+def batch_add_songs(sel_pl: str) -> None:
+    """Write to selected playlist songs that match metadata search."""
     os.system("clear")
+    greetings.batch_add_songs()
 
-    greet_reorder()
+    songs = get_local_songs()
+    with open("music_metadata.txt", "w") as f:
+        f.write("\n".join(songs))
+    time.sleep(1)
 
-    pl_songs = get_pl_songs(sel_playlist)
+    print("Metadata types: 'artist', 'album', 'year'")
+    md_type = input("Choose the type you want to search: ")
+    acceptable_types = ["artist", "album", "year"]
+    while md_type not in acceptable_types:
+        print("Invalid metadata type. Try again.")
+        md_type = input("Choose the type you want to search: ")
 
-    if len(pl_songs) == 0:
-        print("This playlist must contain songs before you can reorder them.\n")
+    md_list = get_md_list(acceptable_types, md_type)
+    print(f"\nThese {md_type}s are available to add:\n")
+    for i in range(len(md_list)):
+        print(f"({i + 1}) {md_list[i]}")
+    print()
+
+    md_item = input(f"Choose the {md_type} to add: ")
+    acceptable_items = range(len(md_list))
+    while (int(md_item) - 1) not in acceptable_items:
+        print(f"Invalid {md_type}. Try again.")
+        md_item = input(f"Choose the {md_type} to add: ")
+    md_choice = md_list[int(int(md_item) - 1)]
+
+    print(f"You chose to add songs from the {md_type} {md_choice}.")
+    confirmation = input(CONFIRM_PROMPT)
+    if confirmation.lower() == "y":
+        print("Adding this batch of songs...")
+    else:
+        print("Batch addition not confirmed.\n" + RETURNING)
         time.sleep(3)
-        return sel_playlist
+        return sel_pl
 
-    choice_str = ""
+    songs_to_add = get_songs_to_add(acceptable_types, md_type, md_choice)
+    with open(sel_pl + ".m3u8", "a") as f:
+        f.writelines(PATH + "/" + songs[song_to_add] + "\n" 
+                     for song_to_add in songs_to_add)
+
+    with open("ascii_confirmation_generator.txt", "w") as f:
+        f.write("Batch addition to playlist.")
+    time.sleep(1)
+    with open("ascii_confirmation_generator.txt", "r") as f:
+        print(f.read())
+
+    # Clean microservice text files
+    with open("ascii_confirmation_generator.txt", "w") as f:
+        f.write("")
+    with open("music_metadata.txt", "w") as f:
+        f.write("")
+
+    print("Batch addition complete!\n" + RETURNING)
+    time.sleep(3)
+    return sel_pl
+
+
+def get_md_list(acceptable_types: list, md_type: str) -> list:
+    """Return list of metadata of specified type."""
+    md_list = []
+    with open("music_metadata.txt", "r") as f:
+        md_list_from_file = f.read().splitlines()
+        i = acceptable_types.index(md_type)
+        while i < len(md_list_from_file):
+            if md_list_from_file[i] not in md_list:
+                md_list.append(md_list_from_file[i])
+            i += 3
+    return md_list
+
+
+def get_songs_to_add(acceptable_types: list, 
+                     md_type: str, md_choice: str) -> list:
+    """a"""
+    songs_to_add = []
+    with open("music_metadata.txt", "r") as f:
+        list_of_tags = f.read().splitlines()
+        i = acceptable_types.index(md_type)
+        j = 0
+        while i < len(list_of_tags):
+            if list_of_tags[i] == md_choice:
+                songs_to_add.append(j)
+            i += 3
+            j += 1
+    return songs_to_add
+
+# -----------------------------------------------------------------------------
+# Remove songs function and sub-calls
+# -----------------------------------------------------------------------------
+
+def remove_songs(sel_pl: str) -> None:
+    """Show menu for removal of song(s) from selected playlist."""
+    os.system("clear")
+    greetings.remove_songs()
+
+    print_pl_songs(sel_pl)
+    pl_songs = get_pl_songs(sel_pl)
+    if len(pl_songs) == 0:
+        print(ERROR_NO_PL_SONGS + "\n" + RETURNING)
+        time.sleep(3)
+        return sel_pl
+
+    # Validate and confirm user input and store removals
+    removals = []
+    while len(removals) == 0:
+        choice_str = input("Enter number(s) to choose song(s): ")
+        choice_list = validate_choice(choice_str, len(pl_songs))
+        if choice_list is not None:
+            removals = confirm_choice(choice_list, pl_songs)
+
+    # Write additions to selected playlist
+    print("Removing song(s) from playlist...")
+    with open(sel_pl + ".m3u8", "w") as f:
+        for pl_song in pl_songs:
+            if pl_song not in removals:
+                f.write(PATH + "/" + pl_song + "\n")
+    print("Done!\n")
+    time.sleep(3)
+    return sel_pl
+
+
+def print_pl_songs(sel_pl: str) -> None:
+    """Print song names from selected playlist."""
+    pl_songs = get_pl_songs(sel_pl)
+    for i in range(len(pl_songs)):
+        print(f"({i + 1}) {pl_songs[i]}")
+    print()
+
+
+def get_pl_songs(sel_pl: str) -> list:
+    """Create list of songs in the selected playlist."""
+    pl_songs = []
+    with open(sel_pl + ".m3u8", "r") as f:
+        song_paths = f.read().splitlines()
+        for i in range(len(song_paths)):
+            song = re.search(r"[^\/]+$", song_paths[i])
+            pl_songs.append(song.group(0))
+    return pl_songs
+
+# -----------------------------------------------------------------------------
+# Reorder songs function and sub-calls
+# -----------------------------------------------------------------------------
+
+def reorder_songs(sel_pl: str) -> None:
+    """Swap items in selected playlist to reorder them."""
+    os.system("clear")
+    greetings.reorder_songs()
+
+    pl_songs = get_pl_songs(sel_pl)
+    if len(pl_songs) == 0:
+        print(ERROR_NO_PL_SONGS + "\n" + RETURNING)
+        time.sleep(3)
+        return sel_pl
+
     while True:
-        print_song_list("playlist", sel_playlist)
+        print_pl_songs(sel_pl)
         choice_str = input("Enter the numbers of two songs to swap: ")
         if choice_str == "done":
             break
-        choice_list = validate_choice(choice_str, pl_songs, len(pl_songs))
+        choice_list = validate_choice(choice_str, len(pl_songs))
         if len(choice_list) != 2:
             print("You must select two songs to swap. Try again.\n")
         else:
             [first_song, second_song] = confirm_choice(choice_list, pl_songs)
             pl_songs[choice_list[0] - 1] = second_song
             pl_songs[choice_list[1] - 1] = first_song
-            with open(sel_playlist + ".m3u8", "w") as f:
-                for pl_song in pl_songs:
-                    f.write(PATH + "/" + pl_song + "\n")
+            with open(sel_pl + ".m3u8", "w") as f:
+                f.writelines(PATH + "/" + pl_song + "\n" for pl_song in pl_songs)
 
-    print("")
-    print("Reorder complete! Returning to main menu.")
+    print("\nReorder complete!\n" + RETURNING)
     time.sleep(3)
+    return sel_pl
 
-    return sel_playlist
+# -----------------------------------------------------------------------------
+# Display playlist function
+# -----------------------------------------------------------------------------
 
-
-def display(sel_playlist: str) -> None:
-    """
-    Show contents of selected playlist to user.
-    """
+def display_pl(sel_pl: str) -> None:
+    """Show contents of selected playlist."""
     os.system("clear")
+    greetings.display_pl(sel_pl)
 
-    greet_display(sel_playlist)
+    print_pl_songs(sel_pl)
+    input("Press ENTER to go back.")
+    return sel_pl
 
-    print_song_list("playlist", sel_playlist)
-    print("")
+# -----------------------------------------------------------------------------
+# Shuffle songs function and sub-calls
+# -----------------------------------------------------------------------------
 
-    go_back = input("Press ENTER to go back.")
-    return sel_playlist
-
-
-def shuffle(sel_playlist: str) -> None:
-    """
-    Write randomized order of songs in selected playlist.
-    """
+def shuffle_songs(sel_pl: str) -> None:
+    """Randomize order of songs in selected playlist."""
     os.system("clear")
-    greet_shuffle()
+    greetings.shuffle_songs()
     print("Pre-shuffle order:\n")
 
-    pl_songs = get_pl_songs(sel_playlist)
-    
+    pl_songs = get_pl_songs(sel_pl)
     if len(pl_songs) == 0:
-        print("This playlist must contain songs before you can reorder them.\n")
+        print(ERROR_NO_PL_SONGS + "\n" + RETURNING)
         time.sleep(3)
-        return sel_playlist
+        return sel_pl
+    print_pl_songs(sel_pl)
 
-    print_song_list("playlist", sel_playlist)
+    preshuffle_order = ""
+    postshuffle_order = ""
 
-    preshuffle_order = None
-    postshuffle_order = None
-
-    with open(sel_playlist + ".m3u8", "r") as f:
+    with open(sel_pl + ".m3u8", "r") as f:
         preshuffle_order = f.read()
-
     with open("list_randomizer.txt", "w") as f:
         f.write(preshuffle_order)
-
-    time.sleep(2)
-
+    time.sleep(1)
     with open("list_randomizer.txt", "r") as f:
         postshuffle_order = f.read()
-
-    with open(sel_playlist + ".m3u8", "w") as f:
+    with open(sel_pl + ".m3u8", "w") as f:
         f.write(postshuffle_order)
 
-    print("")
-    print("Post-shuffle order:")
-
-    print_song_list("playlist", sel_playlist)
+    print("\nPost-shuffle order:")
+    print_pl_songs(sel_pl)
 
     with open("ascii_confirmation_generator.txt", "w") as f:
-            f.write("Shuffle of playlist.")
-    time.sleep(2)
+        f.write("Shuffle of playlist.")
+    time.sleep(1)
     with open("ascii_confirmation_generator.txt", "r") as f:
         print(f.read())
 
-    print("Shuffle complete! Returning to main menu.")
+    print("Shuffle complete!\n" + RETURNING)
 
     # Clean microservice text files
     with open("ascii_confirmation_generator.txt", "w") as f:
@@ -417,393 +521,109 @@ def shuffle(sel_playlist: str) -> None:
         f.write("")
 
     time.sleep(3)
-    return sel_playlist
+    return sel_pl
 
+# -----------------------------------------------------------------------------
+# Duplicate playlist function and sub-calls
+# -----------------------------------------------------------------------------
 
-def duplicate(sel_playlist: str) -> None:
-    """
-    Write a new playlist file identical to the selected playlist.
-    """
+def duplicate_pl(sel_pl: str) -> None:
+    """Write new playlist file identical to selected playlist."""
     os.system("clear")
-    greet_duplicate(sel_playlist)
+    greetings.duplicate_pl(sel_pl)
 
-    confirmation = input("Confirm with Y or deny with any other key: ")
+    confirmation = input(CONFIRM_PROMPT)
     if confirmation.lower() == "y":
         print("Starting duplication...")
     else:
-        print("Duplication not confirmed. Returning to main menu.")
+        print("Duplication not confirmed.\n" + RETURNING)
         time.sleep(3)
-        return sel_playlist
+        return sel_pl
 
-    pl_file = PATH + "/" + sel_playlist
+    pl_file = PATH + "/" + sel_pl
     i = 1
-    ext = ".m3u8"
     while os.path.exists(pl_file + " " + str(i) + ".m3u8"):
         i += 1
     shutil.copy2(pl_file + ".m3u8", pl_file + " " + str(i) + ".m3u8")
 
-    print("Duplication complete! Returning to main menu.")
+    print("Duplication complete!\n" + RETURNING)
     time.sleep(3)
+    return sel_pl
 
-    return sel_playlist
+# -----------------------------------------------------------------------------
+# Delete playlist function and sub-calls
+# -----------------------------------------------------------------------------
 
-
-def delete(sel_playlist) -> str or None:
-    """
-    Delete the selected playlist from the local directory.
-    """
+def delete_pl(sel_pl) -> str:
+    """Delete playlist(s) from current directory."""
     os.system("clear")
-    greet_delete()
+    greetings.delete_pl()
 
-    files = sorted(os.listdir(PATH))
-    playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
-    playlist_count = len(playlists)
+    pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
+    for i in range(len(pls)):
+        print(f"({i + 1}) {pls[i]}")
+    print()
 
-    for i in range(playlist_count):
-        print(f"({i + 1}) {playlists[i]}")
-    
-    print("")
+    # Validate and confirm user input and store removals
+    pls_to_del = []
+    while len(pls_to_del) == 0:
+        choice_str = input("Enter number(s) to delete playlist(s): ")
+        choice_list = validate_choice(choice_str, len(pls))
+        if choice_list is not None:
+            pls_to_del = confirm_choice(choice_list, pls)
 
-    pl_to_del = input("Enter number to select: ")
-    while pl_to_del.isnumeric() is False or \
-        int(pl_to_del) < 1 or \
-        int(pl_to_del) > playlist_count:
-        print("Invalid choice.")
-        pl_to_del = input("Enter number to select: ")
-    pl_to_del = int(pl_to_del)
-
-    confirmation = input("Confirm with Y or deny with any other key: ")
-    if confirmation.lower() == "y":
-        print("Starting deletion...")
+    print("Starting deletion...")
+    for pl_to_del in pls_to_del:
+        os.remove(PATH + "/" + pl_to_del + ".m3u8")
+    print("Deletion complete!\n" + RETURNING)
+    time.sleep(3)
+    if sel_pl in pls_to_del:
+        return ""
     else:
-        print("Deletion not confirmed. Returning to main menu.")
+        return sel_pl
+
+# -----------------------------------------------------------------------------
+# Find stale playlists function and sub-calls
+# -----------------------------------------------------------------------------
+
+def find_stale_pls(sel_pl: str) -> None:
+    """Print playlists that have been unmodified for >7 days."""
+    os.system("clear")
+    greetings.find_stale_pls()
+
+    if contains_pls() is False:
+        print("At least one playlist must exist in this directory for")
+        print("you to find stale playlists.\n" + RETURNING)
         time.sleep(3)
-        return sel_playlist
-
-    os.remove(PATH + "/" + playlists[pl_to_del - 1] + ".m3u8")
-
-    print("Deletion complete! Returning to main menu.")
-    time.sleep(3)
-
-    if playlists[pl_to_del - 1] == sel_playlist:
-        return None
-    else:
-        return sel_playlist
-
-
-def batch_add(sel_playlist: str) -> None:
-    """
-    Write to the selected playlist all songs that match a metadata search.
-    """
-    os.system("clear")
-    greet_batch_add()
-
-    songs = get_local_songs()
-
-    with open("music_metadata.txt", "w") as f:
-        f.write("\n".join(songs))
-
-    time.sleep(2)
-
-    print("Metadata types: 'artist', 'album', 'year'")
-    while True:
-        acceptable_inputs = ["artist", "album", "year"]
-        metadata_type = input("Choose the type you want to search: ")
-        if metadata_type not in acceptable_inputs:
-            print("Invalid type.")
-        else:
-            break
-
-    metadata = []
-    with open("music_metadata.txt", "r") as f:
-        list_of_tags = f.read().splitlines()
-        i = 0
-        if metadata_type == "album":
-            i = 1
-        elif metadata_type == "year":
-            i = 3
-        while i < len(list_of_tags):
-            if list_of_tags[i] not in metadata:
-                metadata.append(list_of_tags[i])
-            i += 4
-
-    print(f"\nThese {metadata_type}s are available to add:\n")
-    for i in range(len(metadata)):
-        print(f"({i + 1}) {metadata[i]}")
-    print("")
-
-    while True:
-        acceptable_inputs = range(len(metadata))
-        metadata_idx = input(f"Choose the {metadata_type} you want to add: ")
-        if (int(metadata_idx) - 1) not in acceptable_inputs:
-            print(f"Invalid {metadata_type}.")
-        else:
-            metadata_tag = metadata[int(int(metadata_idx) - 1)]
-            break
-
-    print(f"You chose to add all songs of the {metadata_type} {metadata_tag}.")
-    confirmation = input("Confirm with Y or deny with any other key: ")
-    if confirmation.lower() == "y":
-        print("Adding this batch of songs...")
-    else:
-        print("Batch addition not confirmed. Returning to main menu.")
-        time.sleep(3)
-        return sel_playlist
-
-    songs_to_add = []
-    with open("music_metadata.txt", "r") as f:
-        list_of_tags = f.read().splitlines()
-        i = 0
-        if metadata_type == "album":
-            i = 1
-        elif metadata_type == "year":
-            i = 3
-        j = 0
-        while i < len(list_of_tags):
-            if list_of_tags[i] == metadata_tag:
-                songs_to_add.append(j)
-            i += 4
-            j += 1
-
-    with open(sel_playlist + ".m3u8", "a") as f:
-        for song_to_add in songs_to_add:
-            f.write(PATH + "/" + songs[song_to_add] + "\n")
-
-    with open("ascii_confirmation_generator.txt", "w") as f:
-            f.write("Batch addition to playlist.")
-    time.sleep(2)
-    with open("ascii_confirmation_generator.txt", "r") as f:
-        print(f.read())
-    
-    # Clean microservice text files
-    with open("ascii_confirmation_generator.txt", "w") as f:
-            f.write("")
-    with open("music_metadata.txt", "w") as f:
-            f.write("")
-
-    print("Batch addition complete! Returning to main menu.")
-    time.sleep(3)
-
-    return sel_playlist
-
-
-def find_stale_playlists(sel_playlist: str) -> None:
-    """
-    Print stale playlists that have not been updated in more than 7 days.
-    """
-    os.system("clear")
-    greet_find_stale_playlists()
+        return ""
 
     # Create list of sorted .m3u8 files in current path
-    files = sorted(os.listdir(PATH))
-    playlists = [f[:-5] for f in files if f.endswith('.m3u8')]
+    pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
 
-    for playlist in playlists:
-        last_mod_timestamp = os.path.getmtime(PATH + "/" + playlist + ".m3u8")
+    for pl in pls:
+        last_mod_timestamp = os.path.getmtime(PATH + "/" + pl + ".m3u8")
         last_mod_datetime = datetime.fromtimestamp(last_mod_timestamp)
         last_modified = last_mod_datetime.strftime("%Y-%m-%d")
         with open("date_diff.txt", "w") as f:
             f.write(last_modified)
-        time.sleep(2)
+        time.sleep(1)
         with open("date_diff.txt", "r") as f:
             response = f.read().split()
             status = response[0]
             days = int(response[1])
             if status == "OVERDUE:" and days > 7:
-                print(playlist) 
+                print(pl)
 
     # Clean microservice text file
     with open("date_diff.txt", "w") as f:
         f.write("")
 
-    print("")
-    go_back = input("Press ENTER to go back.")
-    return sel_playlist
+    input("\nPress ENTER to go back.")
+    return sel_pl
 
+# -----------------------------------------------------------------------------
+# Run main function by default
+# -----------------------------------------------------------------------------
 
-def main() -> None:
-    """
-    Provide command-line interface to user.
-    """
-    sel_playlist = None
-
-    while True:
-        os.system("clear")
-        greet_main()
-        if sel_playlist == None:
-            print("First select a playlist.\n")
-        else:
-            print(f"Your selected playlist is {sel_playlist}.\n")
-        cmd = prompt()
-        sel_playlist = route_cmd(cmd, sel_playlist)
-
-
-# ----------------------------------------------------------------------------
-#                        All greet functions are below
-# ----------------------------------------------------------------------------
-
-
-def greet_main() -> None:
-    """
-    Show informative greeting for user at the main menu.
-    """
-    print("")
-    print("           ____ ____ ____ ____ ____ ____ ____ ____ ")
-    print("          ||P |||L |||A |||Y |||L |||I |||S |||T ||")
-    print("          ||__|||__|||__|||__|||__|||__|||__|||__||")
-    print("          |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
-    print("                ____ ____ ____ ____ ____ ____ ")
-    print("               ||E |||D |||I |||T |||O |||R ||")
-    print("               ||__|||__|||__|||__|||__|||__||")
-    print("               |/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|")
-    print("")
-    print("                 Welcome to Playlist Editor!")
-    print("")
-    print("This program creates, manages, and displays local music playlists.")
-    print("Users must send commands in the local directory that contains the")
-    print("playlists and songs they want to work with.")
-    print("")
-    print("To exit the program from a submenu, press Ctrl+C.")
-    print("")
-
-
-def greet_create() -> None:
-    """
-    Show informative greeting for user at the create menu.
-    """
-    print("* * *                   CREATE PLAYLIST                   * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you create a playlist file.                  *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_select() -> None:
-    """
-    Show informative greeting for user at the select menu.
-    """
-    print("* * *                   SELECT PLAYLIST                   * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you select a playlist to then edit to        *")
-    print("* contain any songs you want in any order that you specify.   *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_add() -> None:
-    """
-    Show informative greeting for user at the add menu.
-    """
-    print("* * *                ADD SONG TO PLAYLIST                 * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you add one or more songs to the selected    *")
-    print("* playlist. To add more than one song, enter multiple         *")
-    print("* numbers separated by commas. Stars indicate that the song   *")
-    print("* is already in the playlist.                                 *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_remove() -> None:
-    """
-    Show informative greeting for user at the remove menu.
-    """
-    print("* * *              REMOVE SONG FROM PLAYLIST              * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you remove one or more songs from the        *")
-    print("* selected playlist. To remove more than one song, enter      *")
-    print("* multiple numbers separated by commas.                       *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_reorder() -> None:
-    """
-    Show informative greeting for user at the reorder menu.
-    """
-    print("* * *                   REORDER SONGS                     * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you reorder songs in the selected playlist.  *")
-    print("* Enter two number separated by a comma to swap the songs     *")
-    print("* next to those numbers. Enter 'done' to go to the main menu. *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_display(sel_playlist: str) -> None:
-    """
-    Show informative greeting for user at the display menu.
-    """
-    print("* * *                   DISPLAY PLAYLIST                  * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This page displays the contents of the selected playlist.   *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-    print(f"{sel_playlist} Playlist:")
-    print("")
-
-
-def greet_shuffle() -> None:
-    """
-    Show informative greeting for user at the shuffle menu.
-    """
-    print("* * *                  SHUFFLE SONGS                      * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you shuffle songs in the selected playlist.  *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_duplicate(sel_playlist: str) -> None:
-    """
-    Show informative greeting for user at the duplicate menu.
-    """
-    print("* * *                DUPLICATE PLAYLIST                   * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu confirms whether you want to duplicate your       *")
-    print("* selected playlist.                                          *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-    print(f"Selected playlist: {sel_playlist}")
-    print("")
-
-
-def greet_delete() -> None:
-    """
-    Show informative greeting for user at the delete menu.
-    """
-    print("* * *                  DELETE PLAYLIST                    * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you delete one of your playlists.            *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_batch_add() -> None:
-    """
-    Show informative greeting for user at the batch menu.
-    """
-    print("* * *             BATCH ADD SONGS TO PLAYLIST             * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you add a batch of songs to the selected     *")
-    print("* playlist. Choose the metadata tag and then type your        *")
-    print("* desired tag contents to automatically add all songs whose   *")
-    print("* metadata tag matches the string you entered.                *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-def greet_find_stale_playlists() -> None:
-    """
-    Show informative greeting for user at the sort menu.
-    """
-    print("* * *                FIND STALE PLAYLISTS                 * * *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("* This menu lets you find stale playlists that have not been  *")
-    print("* modified in more than 7 days. The process is automatic.     *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
-    print("")
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
