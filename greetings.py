@@ -17,7 +17,7 @@ def main() -> None:
     print("This program creates, manages, and displays local music playlists.")
     print("Users must send commands in the local directory that contains the")
     print("playlists and songs they want to work with.\n")
-    print("To exit the program from a submenu, press Ctrl+C.\n")
+    print("To exit the program from a sub-menu, press Ctrl+C.\n")
 
 
 def create_pl() -> None:
