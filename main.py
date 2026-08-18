@@ -427,7 +427,7 @@ def get_pl_songs(sel_pl: str) -> list:
     return pl_songs
 
 # -----------------------------------------------------------------------------
-# Reorder songs function and sub-calls
+# Reorder songs function
 # -----------------------------------------------------------------------------
 
 def reorder_songs(sel_pl: str) -> None:
@@ -474,7 +474,7 @@ def display_pl(sel_pl: str) -> None:
     return sel_pl
 
 # -----------------------------------------------------------------------------
-# Shuffle songs function and sub-calls
+# Shuffle songs function
 # -----------------------------------------------------------------------------
 
 def shuffle_songs(sel_pl: str) -> None:
@@ -524,7 +524,7 @@ def shuffle_songs(sel_pl: str) -> None:
     return sel_pl
 
 # -----------------------------------------------------------------------------
-# Duplicate playlist function and sub-calls
+# Duplicate playlist function
 # -----------------------------------------------------------------------------
 
 def duplicate_pl(sel_pl: str) -> None:
@@ -551,7 +551,7 @@ def duplicate_pl(sel_pl: str) -> None:
     return sel_pl
 
 # -----------------------------------------------------------------------------
-# Delete playlist function and sub-calls
+# Delete playlist function
 # -----------------------------------------------------------------------------
 
 def delete_pl(sel_pl) -> str:
@@ -583,7 +583,7 @@ def delete_pl(sel_pl) -> str:
         return sel_pl
 
 # -----------------------------------------------------------------------------
-# Find stale playlists function and sub-calls
+# Find stale playlists function
 # -----------------------------------------------------------------------------
 
 def find_stale_pls(sel_pl: str) -> None:
