@@ -30,6 +30,7 @@ CMDS = [
 CMDS_NOT_CHECKED = ["create", "select", "delete", "stale", "exit"]
 CONFIRM_PROMPT = "Enter Y to confirm or deny with any other key: "
 ERROR_NO_PL_SONGS = "Playlist must contain songs before you can do this."
+ERROR_NO_PLS = "At least one playlist must exist in this directory for you to"
 PATH = os.getcwd()
 RETURNING = "Returning to main menu."
 
@@ -139,8 +140,7 @@ def select_pl() -> str:
     greetings.select_pl()
 
     if contains_pls() is False:
-        print("At least one playlist must exist in this directory for")
-        print("you to select a playlist.\n" + RETURNING)
+        print(ERROR_NO_PLS + "\nselect a playlist. " + RETURNING)
         time.sleep(3)
         return ""
 
@@ -481,13 +481,14 @@ def shuffle_songs(sel_pl: str) -> None:
     """Randomize order of songs in selected playlist."""
     os.system("clear")
     greetings.shuffle_songs()
-    print("Pre-shuffle order:\n")
-
+    
     pl_songs = get_pl_songs(sel_pl)
     if len(pl_songs) == 0:
         print(ERROR_NO_PL_SONGS + "\n" + RETURNING)
         time.sleep(3)
         return sel_pl
+    
+    print("Pre-shuffle order:\n")
     print_pl_songs(sel_pl)
 
     preshuffle_order = ""
@@ -559,6 +560,11 @@ def delete_pl(sel_pl) -> str:
     os.system("clear")
     greetings.delete_pl()
 
+    if contains_pls() is False:
+        print(ERROR_NO_PLS + "\ndelete a playlist. " + RETURNING)
+        time.sleep(3)
+        return ""
+
     pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
     for i in range(len(pls)):
         print(f"({i + 1}) {pls[i]}")
@@ -592,8 +598,7 @@ def find_stale_pls(sel_pl: str) -> None:
     greetings.find_stale_pls()
 
     if contains_pls() is False:
-        print("At least one playlist must exist in this directory for")
-        print("you to find stale playlists.\n" + RETURNING)
+        print(ERROR_NO_PLS + "\nfind stale playlists. " + RETURNING)
         time.sleep(3)
         return ""
 
