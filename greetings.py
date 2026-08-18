@@ -25,7 +25,7 @@ def create_pl() -> None:
     print("* * *                   CREATE PLAYLIST                   * * *")
     print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
     print("* This menu lets you create a playlist file.                  *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\n")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
 
 
 def select_pl() -> None:
@@ -76,7 +76,7 @@ def reorder_songs() -> None:
     print("* This menu lets you reorder songs in the selected playlist.  *")
     print("* Enter two number separated by a comma to swap the songs     *")
     print("* next to those numbers. Enter 'done' to go to the main menu. *")
-    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *\n")
+    print("* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - *")
 
 
 def display_pl(sel_pl: str) -> None:
