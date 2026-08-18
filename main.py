@@ -601,11 +601,11 @@ def find_stale_pls(sel_pl: str) -> None:
     pls = [f[:-5] for f in sorted(os.listdir(PATH)) if f.endswith(".m3u8")]
 
     for pl in pls:
-        last_mod_timestamp = os.path.getmtime(PATH + "/" + pl + ".m3u8")
-        last_mod_datetime = datetime.fromtimestamp(last_mod_timestamp)
-        last_modified = last_mod_datetime.strftime("%Y-%m-%d")
+        last_mod_float = os.path.getmtime(PATH + "/" + pl + ".m3u8")
+        last_mod_ts = datetime.fromtimestamp(last_mod_float)  # noqa: DTZ006
+        last_mod_strf = last_mod_ts.strftime("%Y-%m-%d")
         with open("date_diff.txt", "w") as f:
-            f.write(last_modified)
+            f.write(last_mod_strf)
         time.sleep(1)
         with open("date_diff.txt", "r") as f:
             response = f.read().split()
