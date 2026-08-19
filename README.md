@@ -2,7 +2,7 @@
 
 ## Description
 
-> [!note] This was my portfolio project for CS 361 Software Engineering I at Oregon State University in Summer 2026.
+This was my portfolio project for CS 361 Software Engineering I at Oregon State University in Summer 2026.
 
 Playlist Editor is a Python app that creates, edits, and displays music playlists from the command line. It relies on four microservices: [Date Difference](https://github.com/jeffananias/Date-Difference-Microservice), [Music Metadata Fetcher](https://github.com/jeffananias/Music-Metadata-Fetcher-Microservice), [List Randomizer](https://github.com/jeffananias/List-Randomizer-Microservice), and [ASCII Confirmation Generator](https://github.com/jeffananias/ASCII-Confirmation-Generator-Microservice).
 
