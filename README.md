@@ -2,7 +2,7 @@
 
 ## Description
 
-Playlist Editor is a Python app that creates, edits, and displays music playlists from the command line. It relies on four microservices: [Date Difference](https://github.com/jeffananias/Date-Difference-Microservice), [Music Metadata Fetcher](https://github.com/jeffananias/Music-Metadata-Fetcher-Microservice), [List Randomizer](https://github.com/jeffananias/List-Randomizer-Microservice), and [ASCII Confirmation Generator](https://github.com/jeffananias/ASCII-Confirmation-Generator-Microservice).
+Playlist Editor is a Python app that creates, manages, and displays music playlists from the command line. It relies on four microservices: [Date Difference](https://github.com/jeffananias/Date-Difference-Microservice), [Music Metadata Fetcher](https://github.com/jeffananias/Music-Metadata-Fetcher-Microservice), [List Randomizer](https://github.com/jeffananias/List-Randomizer-Microservice), and [ASCII Confirmation Generator](https://github.com/jeffananias/ASCII-Confirmation-Generator-Microservice).
 
 It runs entirely on Python in a terminal. No frameworks or libraries were used except for the [tinytag](https://pypi.org/project/tinytag/) library. No LLMs were used in the creation of this project or the microservices.
 
