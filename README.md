@@ -28,11 +28,11 @@ Available commands: `create`, `select`, `add`, `batch`, `remove`, `reorder`, `sh
 - Select a playlist from the cwd
 - Add one or more songs from the cwd to the selected playlist
 - Add one or more songs in batch by artist, album, or year from the cwd to the selected playlist
-- Remove one or more songs the selected playlist
+- Remove one or more songs from the selected playlist
 - Reorder songs in the selected playlist
 - Shuffle songs in the selected playlist
 - Display the contents of the selected playlist
-- Duplicate the selected playlist file to the cwd
+- Duplicate the selected playlist file in the cwd
 - Delete one or more playlists from the cwd
 - Find stale playlists in the cwd (playlists with last modified dates that exceed seven days prior to today's date)
 - Exit the program
