@@ -10,11 +10,11 @@ This was my portfolio project for CS 361 Software Engineering I at Oregon State 
 
 ## Requirements
 
-- The main program must be executed in a directory that contains music files.
-- All playlist files must be in .m3u8 format.
-- All music files must be in one of these formats: .mp3, .wav, .flac, .aac, or .ogg.
-- All four microservices must be running in the same directory as the main program to access the full feature set.
+- The main program must run in a directory that contains music files.
+- All four microservices must run in the same directory as the main program.
 - Users must install [tinytag](https://pypi.org/project/tinytag/) (>=2.3.0) to use the Music Metadata Fetcher microservice.
+- Playlist files must be in .m3u8 format.
+- Music files must be in one of these formats: .mp3, .wav, .flac, .aac, or .ogg.
 
 ## Features
 
