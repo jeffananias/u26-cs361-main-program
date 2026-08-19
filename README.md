@@ -8,8 +8,6 @@ It runs entirely on Python in a terminal. No frameworks or libraries were used e
 
 This was my portfolio project for CS 361 Software Engineering I at Oregon State University in Summer 2026.
 
----
-
 ## Requirements
 
 - The main program must be executed in a directory that contains music files.
@@ -17,8 +15,6 @@ This was my portfolio project for CS 361 Software Engineering I at Oregon State 
 - All music files must be in one of these formats: .mp3, .wav, .flac, .aac, or .ogg.
 - All four microservices must be running in the same directory as the main program to access the full feature set.
 - Users must install [tinytag](https://pypi.org/project/tinytag/) (>=2.3.0) to use the Music Metadata Fetcher microservice.
-
----
 
 ## Features
 
