@@ -366,7 +366,7 @@ def get_md_list(acceptable_types: list, md_type: str) -> list:
 
 def get_batch_additions(acceptable_types: list, 
                      md_type: str, md_choice: str) -> list:
-    """a"""
+    """Return list of songs that match metadata choice."""
     batch_additions = []
     with open("music_metadata.txt", "r") as f:
         list_of_tags = f.read().splitlines()
