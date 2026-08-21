@@ -295,7 +295,7 @@ def batch_add_songs(sel_pl: str) -> None:
 
     songs = get_local_songs()
     with open("music_metadata.txt", "w") as f:
-        f.write("\n".join(songs))
+        f.write("\n".join(songs)) # Send songs to microservice
     time.sleep(1)
 
     print("Metadata types: 'artist', 'album', 'year'")
@@ -305,18 +305,20 @@ def batch_add_songs(sel_pl: str) -> None:
         print("Invalid metadata type. Try again.")
         md_type = input("Choose the type you want to search: ")
 
+    # Print 1-indexed list of metadata of given type
     md_list = get_md_list(acceptable_types, md_type)
     print(f"\nThese {md_type}s are available to add:\n")
     for i in range(len(md_list)):
         print(f"({i + 1}) {md_list[i]}")
     print()
 
+    # Handle metadata choice from printed list
     md_item = input(f"Choose the {md_type} to add: ")
     acceptable_items = range(len(md_list))
     while (int(md_item) - 1) not in acceptable_items:
         print(f"Invalid {md_type}. Try again.")
         md_item = input(f"Choose the {md_type} to add: ")
-    md_choice = md_list[int(int(md_item) - 1)]
+    md_choice = md_list[int(md_item) - 1)]
 
     print(f"You chose to add songs from the {md_type} {md_choice}.")
     confirmation = input(CONFIRM_PROMPT)
