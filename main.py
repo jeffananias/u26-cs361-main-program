@@ -186,8 +186,9 @@ def validate_choice(menu: str, choice_str: str, count: int) -> list:
     """Validate user input for choice(s) made in menus.
     
     Parameters:
+    menu       -- menu in which user makes choice(s)
     choice_str -- string to be parsed for proper format
-    count      -- maximum number that choice cannot exceed
+    count      -- maximum number that choice(s) cannot exceed
     """
     # Ensure string input contains either one integer, 'done', or
     # series of comma-delimited integers
