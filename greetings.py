@@ -1,7 +1,7 @@
 # Name: Jeff Ananias
 # Course: CS 361
 # Description: This file provides the print statements for the
-#              greetings called in main.
+#              greetings called in main.py.
 
 def main() -> None:
     """Show informative greeting at main menu."""
