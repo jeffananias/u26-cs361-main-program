@@ -350,7 +350,7 @@ def batch_add_songs(sel_pl: str) -> None:
 
 
 def get_md_list(acceptable_types: list, md_type: str) -> list:
-    """Return list of metadata of specified type."""
+    """Return list of non-duplicate metadata of specified type."""
     md_list = []
     with open("music_metadata.txt", "r") as f:
         md_list_from_file = f.read().splitlines()
