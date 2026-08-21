@@ -21,14 +21,14 @@ This was my portfolio project for CS 361 Software Engineering I at Oregon State 
 Available commands: `create`, `select`, `add`, `batch`, `remove`, `reorder`, `shuffle`, `display`, `duplicate`, `delete`, `stale`, `exit`
 
 - Create a playlist in the current working directory ("cwd")
-- Select a playlist from the cwd
-- Add one or more songs from the cwd to the selected playlist
-- Add one or more songs in batch by artist, album, or year from the cwd to the selected playlist
-- Remove one or more songs from the selected playlist
+- Select a playlist in the cwd
+- Add one or more songs in the cwd to the selected playlist
+- Add one or more songs in batch by artist, album, or year in the cwd to the selected playlist
+- Remove one or more songs in the selected playlist
 - Reorder songs in the selected playlist
 - Shuffle songs in the selected playlist
 - Display the contents of the selected playlist
 - Duplicate the selected playlist file in the cwd
-- Delete one or more playlists from the cwd
+- Delete one or more playlists in the cwd
 - Find stale playlists in the cwd (playlists with last modified dates that exceed seven days prior to today's date)
 - Exit the program
